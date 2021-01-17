@@ -1,0 +1,10 @@
+energy: MeV
+bin: 512
+min: 0.
+max: 5.
+Voltage threshold: -0.05
+signalstart: 0
+signalend: 99
+max channel 0 voltage: 10.
+max channel 1 voltage: 1.
+Chi2 threshold: 0.05
