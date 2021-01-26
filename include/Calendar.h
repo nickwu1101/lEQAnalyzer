@@ -5,6 +5,13 @@
 
 using namespace std;
 
+typedef struct Duration Duration;
+
+struct Duration {
+    int sec;
+    double ms;
+};
+
 class Calendar {
 public:
     Calendar();
@@ -14,6 +21,7 @@ public:
     ~Calendar();
 
     void      addDuration(int, int, int, int, double);
+    double    calculateDurationInSec();
     Calendar* clone() { return this; };
     void      setDate(string);
     void      setDateTime(string);
@@ -38,11 +46,12 @@ public:
     double    getSecond() { return csec; };
     int       getYDay()   { return cyday; };
 
+    Duration  operator- (const Calendar&);
     bool      operator==(const Calendar&);
     bool      operator!=(const Calendar&);    
-    bool      operator>(const Calendar&);
+    bool      operator> (const Calendar&);
     bool      operator>=(const Calendar&);
-    bool      operator<(const Calendar&);
+    bool      operator< (const Calendar&);
     bool      operator<=(const Calendar&);
 
 private:

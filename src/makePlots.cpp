@@ -25,34 +25,37 @@ makePlots::~makePlots() {
 
 
 
-void makePlots::initialize() {
+void makePlots::initialize(int anaType) {
     readAnalysisParameter();
     prepareDataList();
-    prepareTimeInterval();
+    if(anaType == 0)
+        assignTimeIntervals();
+    else if(anaType == 1)
+	assignSingleLengthOfIntervals();
 }
 
 
 
-void makePlots::execute() {
-    initialize();
+void makePlots::execute(int anaType) {
+    initialize(anaType);
 
     string newRootName = "NewRootFile";
     char outputFilename[200];
     sprintf(outputFilename, "analyzedFile/%s.root", newRootName.c_str());
     TFile* outfile = new TFile(outputFilename, "RECREATE");
-    outfile->mkdir("histogram", "histogram");
 
     for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
-	char histoTitle[10];
-	sprintf(histoTitle, "h%02d", iInt);
-	TH1D* hCh0 = new TH1D(histoTitle, "Maximum as Amplitude of Channel 0", bin[0], min[0], max[0]);
-	
 	bool willBeDealed = false;
 	Calendar *dtStart = new Calendar(startDateTime[iInt]);
 	Calendar *dtEnd = new Calendar(endDateTime[iInt]);
 
+	TH1D* hCh0 = new TH1D(dtStart->getTime().c_str(), "Maximum as Amplitude of Channel 0", bin[0], min[0], max[0]);
+
+	if(outfile->GetDirectory(dtStart->getDate().c_str()) == nullptr)
+	    outfile->mkdir(dtStart->getDate().c_str(), dtStart->getDate().c_str());
+
 	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
-	
+
 	for(unsigned int iData = 0; iData < dataList.size(); iData++) {
 	    Calendar *dtData = new Calendar(dataList[iData]);
 
@@ -84,7 +87,7 @@ void makePlots::execute() {
 	hCh0->SetXTitle("Voltage (V)");
 	hCh0->SetYTitle("Entries");
 
-	outfile->cd("histogram");
+	outfile->cd(dtStart->getDate().c_str());
 	hCh0->Write();
     }
 
@@ -94,7 +97,7 @@ void makePlots::execute() {
 
 
 void makePlots::test() {
-    /*
+    
     ifstream testFile;
     testFile.open("recordDoc/test.txt");
     string input;
@@ -110,17 +113,17 @@ void makePlots::test() {
     testFile.close();
     
     Calendar* c1 = new Calendar(input);
-    c1->addDuration(0, 0, 0, 0, 638.656);
-    Calendar* c2 = c1->clone();
+    Calendar* c2 = new Calendar("20210201000000");
 
-    cout << c1->getDateTime_ms() << endl << c2->getDateTime() << endl;
+    Duration dr = *c1 - *c2;
+    cout << dr.sec/3600. << endl;
 
     //cout << (*c1 >= *c2) << endl;
 
-    prepareTimeInterval();
-    */
+    //assignTimeIntervals();
+    
 
-    execute();
+    //execute(0);
 }
 
 
@@ -197,7 +200,7 @@ void makePlots::prepareDataList() {
 
 
 
-void makePlots::prepareTimeInterval() {
+void makePlots::assignTimeIntervals() {
     ifstream intervalFile;
     intervalFile.open("recordDoc/timeIntervalList.txt");
 
@@ -218,6 +221,24 @@ void makePlots::prepareTimeInterval() {
     }
 
     intervalFile.close();
+}
+
+
+void makePlots::assignSingleLengthOfIntervals() {
+    GetExterSet ges { "recordDoc/SingleLengthOfInterval.txt" };
+
+    string startline = ges.giveStrVar("StartTime");
+    int interHour = ges.giveIntVar("intervalHour");
+    int interMin = ges.giveIntVar("intervalMinute");
+    double interSec = ges.giveDoubleVar("intervalSecond");
+    int numOfTaking = ges.giveIntVar("NumberOfTaking");
+
+    Calendar* cld = new Calendar(startline);
+    for(int i = 0; i < numOfTaking; i++) {
+	startDateTime.push_back(cld->getDateTime());
+	cld->addDuration(0, 0, interHour, interMin, interSec);
+	endDateTime.push_back(cld->getDateTime());
+    }
 }
 
 #endif

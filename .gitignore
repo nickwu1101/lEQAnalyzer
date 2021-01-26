@@ -3,5 +3,6 @@ tdms/*
 yaml/*
 analyzedFile/*
 obj_file/*
+plotting/*
 go
 *~

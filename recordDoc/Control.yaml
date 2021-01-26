@@ -1,5 +1,5 @@
 energy: MeV
-bin: 512
+bin: 256
 min: 0.
 max: 5.
 Voltage threshold: -0.05

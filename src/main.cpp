@@ -2,7 +2,9 @@
 #include <cstdlib>
 
 #include "makePlots.h"
+#include "StatisticTools.h"
 
+void main_test();
 void main_makePlots();
 void main_help();
 
@@ -24,6 +26,14 @@ int main(int argc, char** argv) {
 	    anaType = -1;
 	    break;
 	}
+	else if(arg == "-t" || arg == "--test") {
+	    anaType = -2;
+	    break;
+	}
+	else if(arg == "-s" || arg == "--sigleLength") {
+	    anaType = 1;
+	    break;
+	}
 	else {
 	    std::cout << "Unknown option ... print usage" << std::endl;
 	    anaType = -1;
@@ -32,10 +42,14 @@ int main(int argc, char** argv) {
     }
 
     switch(anaType) {
+    case -2:
+	main_test();
+	break;
     case -1:
 	main_help();
 	break;
     case 0:
+    case 1:
 	main_makePlots();
 	break;
     }
@@ -43,9 +57,15 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+void main_test() {
+    //makePlots *testObj = new makePlots();
+    StatisticTools *testObj = new StatisticTools();
+    testObj->test();
+}
+
 void main_makePlots() {
     makePlots *mp = new makePlots();
-    mp->test();
+    mp->execute(anaType);
 }
 
 void main_help() {

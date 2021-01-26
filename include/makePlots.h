@@ -19,8 +19,8 @@ public:
     makePlots();
     ~makePlots();
 
-    void initialize();
-    void execute();
+    void initialize(int);
+    void execute(int);
     void test();
 
 private:
@@ -40,7 +40,8 @@ private:
 
     void readAnalysisParameter();
     void prepareDataList();
-    void prepareTimeInterval();
+    void assignTimeIntervals();
+    void assignSingleLengthOfIntervals();
 };
 
 #endif

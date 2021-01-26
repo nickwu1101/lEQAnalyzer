@@ -325,6 +325,48 @@ bool Calendar::checkYDayValid() {
 
 
 
+Duration Calendar::operator-(const Calendar &c2) {
+    Duration duration = { 0, 0. };
+    int dyear = cyear;
+    int dyday = cyday;
+    int dhour = chour;
+    int dmin = cmin;
+    double dsec = csec;
+
+    if(cyear > c2.cyear) {
+	while(dyear > c2.cyear) {
+	    dyear--;
+	    if(dyear % 4 == 0)
+		dyday += daysOfYear + 1;
+	    else
+		cyday += daysOfYear;
+	}
+    } else if(cyear < c2.cyear) {
+	while(dyear < c2.cyear) {
+	    if(dyear % 4 == 0)
+		dyday -= daysOfYear + 1;
+	    else
+		dyday -= daysOfYear;
+
+	    dyear += daysOfYear;
+	}
+    } else {}
+
+    dyday -= c2.cyday;
+    dhour -= c2.chour;
+    dmin -= c2.cmin;
+    dsec -= c2.csec;
+    int dsecI = floor(dsec);
+    double dms = 1000*(dsec - floor(dsec));
+
+    duration.sec = dsecI + 60*dmin + 60*60*dhour + 60*60*24*dyday;
+    duration.ms = dms;
+
+    return duration;
+}
+
+
+
 bool Calendar::operator==(const Calendar &c2) {
     return cyear == c2.cyear
 	&& cmon == c2.cmon

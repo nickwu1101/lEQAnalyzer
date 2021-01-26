@@ -1,0 +1,5 @@
+StartTime: 20201222153000
+intervalHour: 0
+intervalMinute: 5
+intervalSecond: 0
+NumberOfTaking: 30

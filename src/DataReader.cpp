@@ -42,7 +42,7 @@ void DataReader::runFillingLoop(TH1D* inputH) {
     Long64_t nentries = fTree->GetEntries();
 
     for(Long64_t entry = 0; entry < nentries; ++entry) {
-	if(entry % 100 == 0)
+	if(entry % 10000 == 0)
 	    cout << "Processed ... " << entry << "/" << nentries << " events" << endl;
 
 	fTree->GetEntry(entry);
