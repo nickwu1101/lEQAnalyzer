@@ -1,13 +1,18 @@
 #include "StatisticTools.h"
 
 #include <TCanvas.h>
+#include <TF1.h>
 #include <TFile.h>
+#include <TFitResult.h>
 #include <TGraph.h>
 #include <TH1.h>
 
 #include "Calendar.h"
+#include "GetExterSet.h"
 
-StatisticTools::StatisticTools() {}
+StatisticTools::StatisticTools() {
+    anaFilename = "analyzedFile/NewRootFile.root";
+}
 
 
 
@@ -16,7 +21,8 @@ StatisticTools::~StatisticTools() {}
 
 
 void StatisticTools::test() {
-    doEntriesGraphByTime();
+    //doEntriesGraphByTime();
+    doPeakFitting();
 }
 
 
@@ -93,9 +99,19 @@ void StatisticTools::doEntriesGraphByTime() {
 
 
 void StatisticTools::doPeakFitting() {
+    GetExterSet ges { "recordDoc/Rn222Setting.txt" };
+    double lowerLimit = ges.giveDoubleVar("lowerLimit");
+    double lowerMean = ges.giveDoubleVar("lowerMean");
+    double Mean = ges.giveDoubleVar("Mean");
+    double higherMean = ges.giveDoubleVar("higherMean");
+    double higherLimit = ges.giveDoubleVar("higherLimit");
+
     prepareHistoMap();
 
     TCanvas* c = new TCanvas("c", "c", 1400, 800);
+    TGraph* g[5];
+    for(unsigned int i = 0; i < sizeof(g)/sizeof(g[0]); i++)
+	g[i] = new TGraph();
 
     Calendar* cStart = nullptr;
     for(map<string, TH1D*>::iterator it = histoMap.begin(); it != histoMap.end(); ++it) {
@@ -104,14 +120,59 @@ void StatisticTools::doPeakFitting() {
 
 	Calendar* cPoint = new Calendar(it->first);
 	Duration dr = *cPoint - *cStart;
+
+	TF1* signalFit = new TF1("signalFit", "expo(0) + gaus(2)", lowerLimit, higherLimit);
+	signalFit->SetParameter(0, 0.);
+	signalFit->SetParameter(1, -3.);
+	signalFit->SetParameter(2, 100.);
+	signalFit->SetParameter(3, Mean);
+	signalFit->SetParameter(4, 0.01);
+	signalFit->SetParLimits(2, 0., 10000.);
+	signalFit->SetParLimits(3, lowerMean, higherMean);
+	signalFit->SetParLimits(4, 0., 0.1);
+
+	TFitResultPtr fitptr = it->second->Fit(signalFit, "S", "", lowerLimit, higherLimit);
+	it->second->SetTitle(it->first.c_str());
+	it->second->SetXTitle("Voltage (V)");
+	it->second->SetYTitle("Entries");
+	it->second->SetStats(kFALSE);
+
+	c->Update();
+	string fittingName = "plotting/fitting/" + it->first + ".png";
+	c->Print(fittingName.c_str());
+
+	for(unsigned int i = 0; i < sizeof(g)/sizeof(g[0]); i++)
+	    g[i]->SetPoint(g[i]->GetN(), dr.sec/60., fitptr->Parameter(i));
     }
+
+    for(unsigned int i = 0; i < sizeof(g)/sizeof(g[0]); i++) {
+	char title[50];
+	sprintf(title, "Parameter %d in Each Interval", i);
+	g[i]->SetTitle(title);
+	g[i]->GetXaxis()->SetTitle("Start Time of Interval (min)");
+	sprintf(title, "Parameter %d", i);
+	g[i]->GetYaxis()->SetTitle("Mean (V)");
+	g[i]->SetMarkerStyle(20);
+	g[i]->SetMarkerColor(kRed);
+	g[i]->SetMarkerSize(2);
+	g[i]->Draw("AP");
+
+	c->Update();
+	char graphFilename[100];
+	sprintf(graphFilename, "plotting/fitting/TimePar%d.png", i);
+	c->Print(graphFilename);
+    }
+
+    closeFile();
 }
 
 
 
 void StatisticTools::openFile() {
-    if(!f.IsOpen())
-	f = new TFile("analyzedFile/NewRootFile.root", "READ");
+    if(f == nullptr)
+	f = new TFile(anaFilename.c_str(), "READ");
+    else if(!f->IsOpen())
+	f->Open(anaFilename.c_str());
 }
 
 

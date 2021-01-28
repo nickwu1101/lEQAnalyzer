@@ -1,0 +1,5 @@
+lowerLimit: 0.5
+lowerMean: 0.75
+Mean: 0.8
+higherMean: 0.85
+higherLimit: 1.5
