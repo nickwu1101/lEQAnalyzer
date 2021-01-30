@@ -22,16 +22,19 @@ public:
     TTree   *fTree;
 
     float    ch0;
+    float    ch1;
     float    timestamp;
 
     double   ch0d;
+    double   ch1d;
     double   timestampD;
 
     TBranch *b_ch0;
+    TBranch *b_ch1;
     TBranch *b_timestamp;
 
     void     initialize();
-    void     runFillingLoop(TH1D*);
+    void     runFillingLoop(TH1D*, int);
 
     void     setEndDateTime(string);
     void     setProjectName(string inputStr) { projectName = inputStr; };
@@ -43,6 +46,9 @@ private:
     string    instrumentCh0 = "NaI";
     double    inputVoltageCh0 = 0.;
     bool      isCh0Amplified = true;
+    string    instrumentCh1 = "none";
+    double    inputVoltageCh1 = 0.;
+    bool      isCh1Amplified = false;
 
     int       recordLength = 0;
     double    referencePosition = 0.;

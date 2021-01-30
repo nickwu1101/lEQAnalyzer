@@ -14,13 +14,18 @@
 
 using namespace std;
 
+class TFile;
+
 class makePlots {
 public:
     makePlots();
     ~makePlots();
 
+    void setAnaType(int inputAnaType) { anaType = inputAnaType; };
+
     void initialize(int);
-    void execute(int);
+    void execute();
+    void makeHistoCh0();
     void test();
 
 private:
@@ -34,12 +39,20 @@ private:
     double unitConverter = 1.;
     double conversingFactorCh0 = 1.;
 
+    TFile* outfile;
+    int anaType;
+    bool   isInit = false;
+
     string instrumentCh0 = "NaI";
     double inputVoltageCh0 = 0.;
-    bool isCh0Amplified = true;
+    bool   isCh0Amplified = true;
+    string instrumentCh1 = "none";
+    double inputVoltageCh1 = 0.;
+    bool   isCh1Amplified = false;
 
     void readAnalysisParameter();
     void prepareDataList();
+    void prepareOutputFile(string);
     void assignTimeIntervals();
     void assignSingleLengthOfIntervals();
 };

@@ -31,12 +31,14 @@ void DataReader::initialize() {
 
     if(instrumentCh0 != "none")
 	fTree->SetBranchAddress("ch0", &ch0, &b_ch0);
+    if(instrumentCh1 != "none")
+	fTree->SetBranchAddress("ch1", &ch1, &b_ch1);
     fTree->SetBranchAddress("timestamp", &timestamp, &b_timestamp);
 }
 
 
 
-void DataReader::runFillingLoop(TH1D* inputH) {
+void DataReader::runFillingLoop(TH1D* inputH, int channel) {
     initialize();
 
     Long64_t nentries = fTree->GetEntries();
@@ -46,7 +48,22 @@ void DataReader::runFillingLoop(TH1D* inputH) {
 	    cout << "Processed ... " << entry << "/" << nentries << " events" << endl;
 
 	fTree->GetEntry(entry);
-	ch0d = ch0;
+	if(instrumentCh0 != "none")
+	    ch0d = ch0;
+	else
+	    ch0d = 0.;
+
+	if(instrumentCh1 != "none")
+	    ch1d = ch1;
+	else
+	    ch1d = 0.;
+	
+	double fillValue = 0.;
+	if(channel == 0)
+	    fillValue = ch0d;
+	else if(channel == 1)
+	    fillValue = ch1d;
+	
 	timestampD = timestamp;
 	
 	Calendar* eventDateTime = new Calendar(projectName);
@@ -54,7 +71,7 @@ void DataReader::runFillingLoop(TH1D* inputH) {
 
 	if(*eventDateTime >= *startDateTime
 	   && *eventDateTime <= *endDateTime) {
-	    inputH->Fill(ch0d);	    
+	    inputH->Fill(fillValue);	    
 	}
     }
 }
@@ -86,4 +103,7 @@ void DataReader::readYAML() {
     instrumentCh0 = ges.giveStrVar("Ch0Instrument");
     inputVoltageCh0 = ges.giveDoubleVar("Ch0InputVoltage");
     isCh0Amplified = ges.giveBoolVar("Ch0Amplified");
+    instrumentCh1 = ges.giveStrVar("Ch1Instrument");
+    inputVoltageCh1 = ges.giveDoubleVar("Ch1InputVoltage");
+    isCh1Amplified = ges.giveBoolVar("Ch1Amplified");
 }

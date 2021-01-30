@@ -26,23 +26,29 @@ makePlots::~makePlots() {
 
 
 void makePlots::initialize(int anaType) {
-    readAnalysisParameter();
-    prepareDataList();
-    if(anaType == 0)
-        assignTimeIntervals();
-    else if(anaType == 1)
-	assignSingleLengthOfIntervals();
+    if(!isInit) {
+	readAnalysisParameter();
+	prepareDataList();
+	if(anaType == 0)
+	    assignTimeIntervals();
+	else if(anaType == 1)
+	    assignSingleLengthOfIntervals();
+
+	isInit = true;
+    }
 }
 
 
 
-void makePlots::execute(int anaType) {
-    initialize(anaType);
+void makePlots::execute() {
+    makeHistoCh0();
+}
 
-    string newRootName = "NewRootFile";
-    char outputFilename[200];
-    sprintf(outputFilename, "analyzedFile/%s.root", newRootName.c_str());
-    TFile* outfile = new TFile(outputFilename, "RECREATE");
+
+
+void makePlots::makeHistoCh0() {
+    initialize(anaType);
+    prepareOutputFile("NewRootFile");
 
     for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
 	bool willBeDealed = false;
@@ -80,7 +86,7 @@ void makePlots::execute(int anaType) {
 		DataReader* dr = new DataReader(dataList[iData]);
 		dr->setStartDateTime(dtStart->getDateTime());
 		dr->setEndDateTime(dtEnd->getDateTime());
-		dr->runFillingLoop(hCh0);
+		dr->runFillingLoop(hCh0, 0);
 	    }
 	}
 
@@ -196,6 +202,17 @@ void makePlots::prepareDataList() {
     }
 
     sort(dataList.begin(), dataList.end());
+}
+
+
+
+void makePlots::prepareOutputFile(string outfileName) {
+    char outputFilename[200];
+    sprintf(outputFilename, "analyzedFile/%s.root", outfileName.c_str());
+    if(outfile == nullptr)
+	outfile = new TFile(outputFilename, "RECREATE");
+    else
+	outfile = outfile->Open(outputFilename, "RECREATE");
 }
 
 

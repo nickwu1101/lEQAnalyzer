@@ -21,7 +21,7 @@ StatisticTools::~StatisticTools() {}
 
 
 void StatisticTools::test() {
-    //doEntriesGraphByTime();
+    doEntriesGraphByTime();
     doPeakFitting();
 }
 
@@ -91,7 +91,7 @@ void StatisticTools::doEntriesGraphByTime() {
     gEntry->Draw("AP");
 
     c->Update();
-    c->Print("plotting/TimeEntries.png");
+    c->Print("plotting/fitting/TimeEntries.png");
 
     closeFile();
 }

@@ -65,7 +65,8 @@ void main_test() {
 
 void main_makePlots() {
     makePlots *mp = new makePlots();
-    mp->execute(anaType);
+    mp->setAnaType(anaType);
+    mp->execute();
 }
 
 void main_help() {
