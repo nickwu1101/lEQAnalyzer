@@ -11,7 +11,7 @@
 #include "GetExterSet.h"
 
 StatisticTools::StatisticTools() {
-    anaFilename = "analyzedFile/NewRootFile.root";
+    anaFilename = "analyzedFile/HistoCh0.root";
 }
 
 
@@ -32,28 +32,24 @@ void StatisticTools::execute() {}
 
 
 void StatisticTools::prepareHistoMap() {
-    if(!isHistoMapDone) {
-	openFile();
-	TList* list1 = f->GetListOfKeys();
+    openFile();
+    TList* list1 = f->GetListOfKeys();
 
-	TIter next1(list1);
-	TObject* obj1 = nullptr;
-	while((obj1 = next1())) {
-	    cout << obj1->GetName() << endl;
-	    TDirectory* dir = f->GetDirectory(obj1->GetName());
-	    TList* list2 = dir->GetListOfKeys();
+    TIter next1(list1);
+    TObject* obj1 = nullptr;
+    while((obj1 = next1())) {
+	cout << obj1->GetName() << endl;
+	TDirectory* dir = f->GetDirectory(obj1->GetName());
+	TList* list2 = dir->GetListOfKeys();
 
-	    TIter next2(list2);
-	    TObject* obj2 = nullptr;
-	    while((obj2 = next2())) {
-		cout << "\t" << obj2->GetName() << endl;
-		string totalPath = (string)obj1->GetName() + "/" + (string)obj2->GetName();
-		histoMap[(string)obj1->GetName() + (string)obj2->GetName()] = (TH1D*)f->Get(totalPath.c_str());
-	    }
+	TIter next2(list2);
+	TObject* obj2 = nullptr;
+	while((obj2 = next2())) {
+	    cout << "\t" << obj2->GetName() << endl;
+	    string totalPath = (string)obj1->GetName() + "/" + (string)obj2->GetName();
+	    histoMap[(string)obj1->GetName() + (string)obj2->GetName()] = (TH1D*)f->Get(totalPath.c_str());
 	}
     }
-
-    isHistoMapDone = true;
 }
 
 
@@ -91,8 +87,9 @@ void StatisticTools::doEntriesGraphByTime() {
     gEntry->Draw("AP");
 
     c->Update();
-    c->Print("plotting/fitting/TimeEntries.png");
+    c->Print("plotting/fitting/TimeEntriesCh0.png");
 
+    c->Close();
     closeFile();
 }
 
@@ -132,6 +129,7 @@ void StatisticTools::doPeakFitting() {
 	signalFit->SetParLimits(4, 0., 0.1);
 
 	TFitResultPtr fitptr = it->second->Fit(signalFit, "S", "", lowerLimit, higherLimit);
+
 	it->second->SetTitle(it->first.c_str());
 	it->second->SetXTitle("Voltage (V)");
 	it->second->SetYTitle("Entries");
@@ -163,6 +161,7 @@ void StatisticTools::doPeakFitting() {
 	c->Print(graphFilename);
     }
 
+    c->Close();
     closeFile();
 }
 
@@ -171,8 +170,10 @@ void StatisticTools::doPeakFitting() {
 void StatisticTools::openFile() {
     if(f == nullptr)
 	f = new TFile(anaFilename.c_str(), "READ");
-    else if(!f->IsOpen())
-	f->Open(anaFilename.c_str());
+    else if(!f->IsOpen()) {
+	delete f;
+	f = new TFile(anaFilename.c_str(), "READ");
+    }
 }
 
 

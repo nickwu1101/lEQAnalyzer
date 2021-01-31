@@ -35,9 +35,11 @@ public:
 
     void     initialize();
     void     runFillingLoop(TH1D*, int);
+    void     runCoincidenceFilling(TH1D*, int, double);
 
     void     setEndDateTime(string);
     void     setProjectName(string inputStr) { projectName = inputStr; };
+    void     setQuantity(string inputStr) { quantity = inputStr; };
     void     setStartDateTime(string);
 
 private:
@@ -59,12 +61,15 @@ private:
     int       signalend = 1000;
 
     string    projectName;
+    bool      isInit = false;
+    string    quantity = "Voltage";
     Calendar *fileDateTime;
     Calendar *startDateTime;
     Calendar *endDateTime;
     
 
     void   readYAML();
+    double V2MeV(double);
 };
 
 #endif

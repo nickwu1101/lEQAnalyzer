@@ -60,7 +60,7 @@ slicedarray2 = array( 'f', [ 0 ] * singleLength )
 t = ROOT.TTree("detector_A", "detector_A")
 t.Branch('ch0',slicedarray0,"slicedarray0[%d]/F" %(singleLength))
 t.Branch('ch1',slicedarray1,"slicedarray1[%d]/F" %(singleLength))
-#t.Branch('timestamp',slicedarray2,"slicedarray2[%d]/F" %(singleLength))
+t.Branch('timestamp',slicedarray2,"slicedarray2[%d]/F" %(singleLength))
 
 # Loop
 for index in range (Events):
@@ -71,7 +71,7 @@ for index in range (Events):
     for idx, val in enumerate(range(start_index, end_index)):
         slicedarray0[idx] = rawdata[b"/'Take Data'/'ch0'"][val]
         slicedarray1[idx] = rawdata[b"/'Take Data'/'ch1'"][val]
-        #slicedarray2[idx] = rawdata[b"/'Take Data'/'timestamp'"][val]
+        slicedarray2[idx] = rawdata[b"/'Take Data'/'timestamp'"][val]
     t.Fill()
 
 # Output

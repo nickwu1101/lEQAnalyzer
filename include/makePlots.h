@@ -23,9 +23,10 @@ public:
 
     void setAnaType(int inputAnaType) { anaType = inputAnaType; };
 
-    void initialize(int);
     void execute();
     void makeHistoCh0();
+    void makeHistoCh1();
+    void doCoincidence(int, int, double);
     void test();
 
 private:
@@ -38,18 +39,13 @@ private:
     vector<Double_t> max;
     double unitConverter = 1.;
     double conversingFactorCh0 = 1.;
+    string quantity = "Voltage";
 
-    TFile* outfile;
+    TFile* outfile = nullptr;
     int anaType;
     bool   isInit = false;
 
-    string instrumentCh0 = "NaI";
-    double inputVoltageCh0 = 0.;
-    bool   isCh0Amplified = true;
-    string instrumentCh1 = "none";
-    double inputVoltageCh1 = 0.;
-    bool   isCh1Amplified = false;
-
+    void initialize();
     void readAnalysisParameter();
     void prepareDataList();
     void prepareOutputFile(string);

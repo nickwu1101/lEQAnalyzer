@@ -25,14 +25,18 @@ makePlots::~makePlots() {
 
 
 
-void makePlots::initialize(int anaType) {
+void makePlots::initialize() {
     if(!isInit) {
 	readAnalysisParameter();
 	prepareDataList();
-	if(anaType == 0)
+	if(anaType == 0) {
+	    cout << "AAA" << endl;
 	    assignTimeIntervals();
-	else if(anaType == 1)
+	}
+	else if(anaType == 1) {
+	    cout << "BBB" << endl;
 	    assignSingleLengthOfIntervals();
+	}
 
 	isInit = true;
     }
@@ -42,13 +46,15 @@ void makePlots::initialize(int anaType) {
 
 void makePlots::execute() {
     makeHistoCh0();
+    makeHistoCh1();
+    doCoincidence(0, 1, 0.0055);
 }
 
 
 
 void makePlots::makeHistoCh0() {
-    initialize(anaType);
-    prepareOutputFile("NewRootFile");
+    initialize();
+    prepareOutputFile("HistoCh0");
 
     for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
 	bool willBeDealed = false;
@@ -74,27 +80,144 @@ void makePlots::makeHistoCh0() {
 			willBeDealed = true;
 		    else
 			willBeDealed = false;
-		}
-		else
+		} else
 		    willBeDealed = false;
-	    }
-	    else
+	    } else
 		willBeDealed = false;
 
 	    if(willBeDealed) {
 		cout << dataList[iData] << endl;
 		DataReader* dr = new DataReader(dataList[iData]);
+		dr->setQuantity(quantity);
 		dr->setStartDateTime(dtStart->getDateTime());
 		dr->setEndDateTime(dtEnd->getDateTime());
 		dr->runFillingLoop(hCh0, 0);
 	    }
 	}
 
-	hCh0->SetXTitle("Voltage (V)");
+	if(quantity == "Voltage")
+	    hCh0->SetXTitle("Voltage (V)");
+	else if(quantity == "Energy")
+	    hCh0->SetXTitle("Energy (MeV)");
+
 	hCh0->SetYTitle("Entries");
 
 	outfile->cd(dtStart->getDate().c_str());
 	hCh0->Write();
+    }
+
+    outfile->Close();
+}
+
+
+
+void makePlots::makeHistoCh1() {
+    initialize();
+    prepareOutputFile("HistoCh1");
+
+    for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
+	bool willBeDealed = false;
+	Calendar *dtStart = new Calendar(startDateTime[iInt]);
+	Calendar *dtEnd = new Calendar(endDateTime[iInt]);
+
+	TH1D* hCh1 = new TH1D(dtStart->getTime().c_str(), "Maximum as Amplitude of Channel 1", bin[1], min[1], max[1]);
+
+	if(outfile->GetDirectory(dtStart->getDate().c_str()) == nullptr)
+	    outfile->mkdir(dtStart->getDate().c_str(), dtStart->getDate().c_str());
+
+	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
+
+	for(unsigned int iData = 0; iData < dataList.size(); iData++) {
+	    Calendar *dtData = new Calendar(dataList[iData]);
+
+	    if(*dtData >= *dtStart && *dtData < *dtEnd)
+		willBeDealed = true;
+	    else if(*dtData < *dtStart) {
+		if(iData + 1 < dataList.size()) {
+		    Calendar *dtNextData = new Calendar(dataList[iData + 1]);
+		    if(*dtNextData > *dtStart)
+			willBeDealed = true;
+		    else
+			willBeDealed = false;
+		} else
+		    willBeDealed = false;
+	    } else
+		willBeDealed = false;
+
+	    if(willBeDealed) {
+		cout << dataList[iData] << endl;
+		DataReader* dr = new DataReader(dataList[iData]);
+		dr->setQuantity("Voltage");
+		dr->setStartDateTime(dtStart->getDateTime());
+		dr->setEndDateTime(dtEnd->getDateTime());
+		dr->runFillingLoop(hCh1, 1);
+	    }
+	}
+
+	hCh1->SetXTitle("Voltage (V)");
+	hCh1->SetYTitle("Entries");
+
+	outfile->cd(dtStart->getDate().c_str());
+	hCh1->Write();
+    }
+
+    outfile->Close();
+}
+
+
+
+void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
+    initialize();
+    prepareOutputFile("Coincidence");
+
+    for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
+	bool willBeDealed = false;
+	Calendar *dtStart = new Calendar(startDateTime[iInt]);
+	Calendar *dtEnd = new Calendar(endDateTime[iInt]);
+
+	TH1D* hGoal = new TH1D(dtStart->getTime().c_str(), "Coincidence", bin[goalCh], min[goalCh], max[goalCh]);
+
+	if(outfile->GetDirectory(dtStart->getDate().c_str()) == nullptr)
+	    outfile->mkdir(dtStart->getDate().c_str(), dtStart->getDate().c_str());
+
+	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
+
+	for(unsigned int iData = 0; iData< dataList.size(); iData++) {
+	    Calendar *dtData = new Calendar(dataList[iData]);
+
+	    if(*dtData >= *dtStart && *dtData < *dtEnd)
+		willBeDealed = true;
+	    else if(*dtData < *dtStart) {
+		if(iData + 1 < dataList.size()) {
+		    Calendar *dtNextData = new Calendar(dataList[iData + 1]);
+		    if(*dtNextData > *dtStart)
+			willBeDealed = true;
+		    else
+			willBeDealed = false;
+		} else
+		    willBeDealed = false;
+	    } else
+		willBeDealed = false;
+
+	    if(willBeDealed) {
+		cout << dataList[iData] << endl;
+		DataReader* dr = new DataReader(dataList[iData]);
+		dr->setQuantity(quantity);
+		dr->setStartDateTime(dtStart->getDateTime());
+		dr->setEndDateTime(dtEnd->getDateTime());
+		dr->runCoincidenceFilling(hGoal, goalCh, threshold);
+	    }
+	}
+
+	if(quantity == "Voltage")
+	    hGoal->SetXTitle("Voltage (V)");
+	else if(quantity == "Energy")
+	    hGoal->SetXTitle("Energy (MeV)");
+
+	hGoal->SetYTitle("Entries");
+
+	outfile->cd(dtStart->getDate().c_str());
+	hGoal->Write();
     }
 
     outfile->Close();
@@ -139,6 +262,8 @@ void makePlots::readAnalysisParameter() {
 
     string energyUnit = ges.giveStrVar("energy");
     if(energyUnit == "MeV") unitConverter = 1.;
+
+    quantity = ges.giveStrVar("quantity");
 
     string binline = ges.giveStrVar("bin");
     while(!binline.empty()) {
@@ -211,8 +336,10 @@ void makePlots::prepareOutputFile(string outfileName) {
     sprintf(outputFilename, "analyzedFile/%s.root", outfileName.c_str());
     if(outfile == nullptr)
 	outfile = new TFile(outputFilename, "RECREATE");
-    else
-	outfile = outfile->Open(outputFilename, "RECREATE");
+    else {
+	delete outfile;
+	outfile = new TFile(outputFilename, "RECREATE");
+    }
 }
 
 

@@ -20,7 +20,6 @@ public:
 private:
     map<string, TH1D*> histoMap;
     string anaFilename;
-    bool isHistoMapDone = false;
     TFile *f = nullptr;
 
     void prepareHistoMap();

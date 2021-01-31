@@ -27,13 +27,17 @@ DataReader::~DataReader() {
 
 
 void DataReader::initialize() {
-    readYAML();
+    if(!isInit) {
+	readYAML();
 
-    if(instrumentCh0 != "none")
-	fTree->SetBranchAddress("ch0", &ch0, &b_ch0);
-    if(instrumentCh1 != "none")
-	fTree->SetBranchAddress("ch1", &ch1, &b_ch1);
-    fTree->SetBranchAddress("timestamp", &timestamp, &b_timestamp);
+	if(instrumentCh0 != "none")
+	    fTree->SetBranchAddress("ch0", &ch0, &b_ch0);
+	if(instrumentCh1 != "none")
+	    fTree->SetBranchAddress("ch1", &ch1, &b_ch1);
+	fTree->SetBranchAddress("timestamp", &timestamp, &b_timestamp);
+
+	isInit = true;
+    }
 }
 
 
@@ -78,6 +82,54 @@ void DataReader::runFillingLoop(TH1D* inputH, int channel) {
 
 
 
+void DataReader::runCoincidenceFilling(TH1D* inputH, int channel, double threshold) {
+    initialize();
+
+    Long64_t nentries = fTree->GetEntries();
+
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	if(entry % 10000 == 0)
+	    cout << "Processed ... " << entry << "/" << nentries << " events" << endl;
+
+	fTree->GetEntry(entry);
+	if(instrumentCh0 != "none")
+	    ch0d = ch0;
+	else
+	    ch0d = 0;
+
+	if(instrumentCh1 != "none")
+	    ch1d = ch1;
+	else ch1d = 0.;
+
+	double fillValue = 0.;
+	double threValue = 0.;
+	if(channel == 0) {
+	    fillValue = ch0d;
+	    threValue = ch1d;
+	} else if(channel == 1) {
+	    fillValue = ch1d;
+	    threValue = ch0d;
+	}
+
+	timestampD = timestamp;
+
+	Calendar* eventDateTime = new Calendar(projectName);
+	eventDateTime->addDuration(0, 0, 0, 0, timestampD);
+
+	if(*eventDateTime >= *startDateTime
+	   && *eventDateTime <= *endDateTime) {
+	    if(threValue >= threshold) {
+		if(quantity == "Voltage")
+		    inputH->Fill(fillValue);
+		else if(quantity == "Energy")
+		    inputH->Fill(V2MeV(fillValue));
+	    }
+	}
+    }
+}
+
+
+
 void DataReader::setEndDateTime(string dtStr) {
     endDateTime->setDateTime(dtStr);
 }
@@ -106,4 +158,10 @@ void DataReader::readYAML() {
     instrumentCh1 = ges.giveStrVar("Ch1Instrument");
     inputVoltageCh1 = ges.giveDoubleVar("Ch1InputVoltage");
     isCh1Amplified = ges.giveBoolVar("Ch1Amplified");
+}
+
+
+
+double DataReader::V2MeV(double input) {
+    return (input - 0.121543)/1.021586;
 }
