@@ -14,6 +14,7 @@
 
 using namespace std;
 
+class Calendar;
 class TFile;
 
 class makePlots {
@@ -51,6 +52,9 @@ private:
     void prepareOutputFile(string);
     void assignTimeIntervals();
     void assignSingleLengthOfIntervals();
+    bool hasDataInInterval(string, string, string, string);
+    bool hasDataInInterval(string, Calendar*, Calendar*, string);
+    bool hasDataInInterval(Calendar*, Calendar*, Calendar*, Calendar*);
 };
 
 #endif

@@ -67,21 +67,10 @@ void makePlots::makeHistoCh0() {
 	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
 
 	for(unsigned int iData = 0; iData < dataList.size(); iData++) {
-	    Calendar *dtData = new Calendar(dataList[iData]);
-
-	    if(*dtData >= *dtStart && *dtData < *dtEnd)
-		willBeDealed = true;
-	    else if(*dtData < *dtStart) {
-		if(iData + 1 < dataList.size()) {
-		    Calendar *dtNextData = new Calendar(dataList[iData + 1]);
-		    if(*dtNextData > *dtStart)
-			willBeDealed = true;
-		    else
-			willBeDealed = false;
-		} else
-		    willBeDealed = false;
-	    } else
-		willBeDealed = false;
+	    if(iData + 1 >= dataList.size())
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, "null");
+	    else
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, dataList[iData + 1]);
 
 	    if(willBeDealed) {
 		cout << dataList[iData] << endl;
@@ -126,21 +115,10 @@ void makePlots::makeHistoCh1() {
 	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
 
 	for(unsigned int iData = 0; iData < dataList.size(); iData++) {
-	    Calendar *dtData = new Calendar(dataList[iData]);
-
-	    if(*dtData >= *dtStart && *dtData < *dtEnd)
-		willBeDealed = true;
-	    else if(*dtData < *dtStart) {
-		if(iData + 1 < dataList.size()) {
-		    Calendar *dtNextData = new Calendar(dataList[iData + 1]);
-		    if(*dtNextData > *dtStart)
-			willBeDealed = true;
-		    else
-			willBeDealed = false;
-		} else
-		    willBeDealed = false;
-	    } else
-		willBeDealed = false;
+	    if(iData + 1 >= dataList.size())
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, "null");
+	    else
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, dataList[iData + 1]);
 
 	    if(willBeDealed) {
 		cout << dataList[iData] << endl;
@@ -181,21 +159,10 @@ void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
 	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
 
 	for(unsigned int iData = 0; iData< dataList.size(); iData++) {
-	    Calendar *dtData = new Calendar(dataList[iData]);
-
-	    if(*dtData >= *dtStart && *dtData < *dtEnd)
-		willBeDealed = true;
-	    else if(*dtData < *dtStart) {
-		if(iData + 1 < dataList.size()) {
-		    Calendar *dtNextData = new Calendar(dataList[iData + 1]);
-		    if(*dtNextData > *dtStart)
-			willBeDealed = true;
-		    else
-			willBeDealed = false;
-		} else
-		    willBeDealed = false;
-	    } else
-		willBeDealed = false;
+	    if(iData + 1 >= dataList.size())
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, "null");
+	    else
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, dataList[iData + 1]);
 
 	    if(willBeDealed) {
 		cout << dataList[iData] << endl;
@@ -381,6 +348,51 @@ void makePlots::assignSingleLengthOfIntervals() {
 	cld->addDuration(0, 0, interHour, interMin, interSec);
 	endDateTime.push_back(cld->getDateTime());
     }
+}
+
+
+
+bool makePlots::hasDataInInterval(string inputDTStr, string startDTStr, string endDTStr, string nextDTStr) {
+    Calendar *dtData = new Calendar(inputDTStr);
+    Calendar *dtStart = new Calendar(startDTStr);
+    Calendar *dtEnd = new Calendar(endDTStr);
+
+    if(nextDTStr == "null") {
+	return hasDataInInterval(dtData, dtStart, dtEnd, nullptr);
+    } else {
+	Calendar *dtNext = new Calendar(nextDTStr);
+	return hasDataInInterval(dtData, dtStart, dtEnd, dtNext);
+    }
+}
+
+
+
+bool makePlots::hasDataInInterval(string inputDTStr, Calendar* startDT, Calendar* endDT, string nextDTStr) {
+    Calendar *dtData = new Calendar(inputDTStr);
+
+    if(nextDTStr == "null") {
+	return hasDataInInterval(dtData, startDT, endDT, nullptr);
+    } else {
+	Calendar *dtNext = new Calendar(nextDTStr);
+	return hasDataInInterval(dtData, startDT, endDT, dtNext);
+    }
+}
+
+
+
+bool makePlots::hasDataInInterval(Calendar* inputDT, Calendar* startDT, Calendar* endDT, Calendar* nextDT) {
+    if(*inputDT >= *startDT && *inputDT < *endDT)
+	return true;
+    else if(*inputDT < *startDT) {
+	if(nextDT != nullptr) {
+	    if(*nextDT > *startDT)
+		return true;
+	    else
+		return false;
+	} else
+	    return false;
+    } else
+	return false;
 }
 
 #endif
