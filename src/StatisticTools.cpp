@@ -102,6 +102,7 @@ void StatisticTools::doPeakFitting() {
     double Mean = ges.giveDoubleVar("Mean");
     double higherMean = ges.giveDoubleVar("higherMean");
     double higherLimit = ges.giveDoubleVar("higherLimit");
+    string quantity = ges.giveStrVar("quantity");
 
     prepareHistoMap();
 
@@ -131,7 +132,11 @@ void StatisticTools::doPeakFitting() {
 	TFitResultPtr fitptr = it->second->Fit(signalFit, "S", "", lowerLimit, higherLimit);
 
 	it->second->SetTitle(it->first.c_str());
-	it->second->SetXTitle("Voltage (V)");
+	if(quantity == "Voltage")
+	    it->second->SetXTitle("Voltage (V)");
+	else if(quantity == "Energy")
+	    it->second->SetXTitle("Energy (MeV)");
+
 	it->second->SetYTitle("Entries");
 	it->second->SetStats(kFALSE);
 
@@ -148,8 +153,18 @@ void StatisticTools::doPeakFitting() {
 	sprintf(title, "Parameter %d in Each Interval", i);
 	g[i]->SetTitle(title);
 	g[i]->GetXaxis()->SetTitle("Start Time of Interval (min)");
+
 	sprintf(title, "Parameter %d", i);
-	g[i]->GetYaxis()->SetTitle("Mean (V)");
+	if(i == 3) {
+	    if(quantity == "Voltage")
+		strcat(title, " (V)");
+	    else if(quantity == "Energy")
+		strcat(title, " (MeV)");
+
+	    g[i]->GetYaxis()->SetTitle(title);
+	} else
+	    g[i]->GetYaxis()->SetTitle(title);
+
 	g[i]->SetMarkerStyle(20);
 	g[i]->SetMarkerColor(kRed);
 	g[i]->SetMarkerSize(2);

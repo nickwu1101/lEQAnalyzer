@@ -75,8 +75,12 @@ void DataReader::runFillingLoop(TH1D* inputH, int channel) {
 
 	if(*eventDateTime >= *startDateTime
 	   && *eventDateTime <= *endDateTime) {
-	    inputH->Fill(fillValue);	    
-	}
+	    if(quantity == "Voltage")
+		inputH->Fill(fillValue);
+	    else if(quantity == "Energy")
+		inputH->Fill(V2MeV(fillValue));
+	} else if(*eventDateTime > *endDateTime)
+	    break;
     }
 }
 
@@ -124,7 +128,8 @@ void DataReader::runCoincidenceFilling(TH1D* inputH, int channel, double thresho
 		else if(quantity == "Energy")
 		    inputH->Fill(V2MeV(fillValue));
 	    }
-	}
+	} else if(*eventDateTime > *endDateTime)
+	    break;
     }
 }
 
@@ -163,5 +168,5 @@ void DataReader::readYAML() {
 
 
 double DataReader::V2MeV(double input) {
-    return (input - 0.121543)/1.021586;
+    return (input - 0.121653)/1.021504;
 }

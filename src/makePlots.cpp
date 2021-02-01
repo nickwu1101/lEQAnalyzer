@@ -30,11 +30,9 @@ void makePlots::initialize() {
 	readAnalysisParameter();
 	prepareDataList();
 	if(anaType == 0) {
-	    cout << "AAA" << endl;
 	    assignTimeIntervals();
 	}
 	else if(anaType == 1) {
-	    cout << "BBB" << endl;
 	    assignSingleLengthOfIntervals();
 	}
 
