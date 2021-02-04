@@ -1,6 +1,6 @@
-lowerLimit: 0.5
-lowerMean: 0.7
-Mean: 0.8
-higherMean: 0.9
+lowerLimit: 0.4
+lowerMean: 0.6
+Mean: 0.65
+higherMean: 0.7
 higherLimit: 1.
-quantity: Voltage
+quantity: Energy
