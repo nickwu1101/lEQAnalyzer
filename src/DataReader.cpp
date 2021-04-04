@@ -168,5 +168,5 @@ void DataReader::readYAML() {
 
 
 double DataReader::V2MeV(double input) {
-    return (input - 0.121607)/1.021556;
+    return (input - 0.134882)/1.013791;
 }

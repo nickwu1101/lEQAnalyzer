@@ -70,7 +70,7 @@ for index in range (Events):
     end_index = (index + 1) * singleLength
     for idx, val in enumerate(range(start_index, end_index)):
         slicedarray0[idx] = rawdata[b"/'Take Data'/'ch0'"][val]
-        slicedarray1[idx] = rawdata[b"/'Take Data'/'ch1'"][val]
+        slicedarray1[idx] = rawdata[b"/'Take Data'/'timestamp'"][val]
         #slicedarray2[idx] = rawdata[b"/'Take Data'/'timestamp'"][val]
     t.Fill()
 
