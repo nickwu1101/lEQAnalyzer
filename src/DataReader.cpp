@@ -75,10 +75,12 @@ void DataReader::runFillingLoop(TH1D* inputH, int channel) {
 
 	if(*eventDateTime >= *startDateTime
 	   && *eventDateTime <= *endDateTime) {
-	    if(quantity == "Voltage")
-		inputH->Fill(fillValue);
-	    else if(quantity == "Energy")
-		inputH->Fill(V2MeV(fillValue));
+	    if(!doUseThreshold || fillValue >= threshold) {
+		if(quantity == "Voltage")
+		    inputH->Fill(fillValue);
+		else if(quantity == "Energy")
+		    inputH->Fill(V2MeV(fillValue));
+	    }
 	} else if(*eventDateTime > *endDateTime)
 	    break;
     }
@@ -143,6 +145,13 @@ void DataReader::setEndDateTime(string dtStr) {
 
 void DataReader::setStartDateTime(string dtStr) {
     startDateTime->setDateTime(dtStr);
+}
+
+
+
+void DataReader::setThreshold(bool inputBool, double inputThre) {
+    doUseThreshold = inputBool;
+    threshold = inputThre;
 }
 
 

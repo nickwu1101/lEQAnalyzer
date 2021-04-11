@@ -41,6 +41,7 @@ public:
     void     setProjectName(string inputStr) { projectName = inputStr; };
     void     setQuantity(string inputStr) { quantity = inputStr; };
     void     setStartDateTime(string);
+    void     setThreshold(bool, double);
 
 private:
     double    conversingFactorCh0 = 1.;
@@ -63,6 +64,8 @@ private:
     string    projectName;
     bool      isInit = false;
     string    quantity = "Voltage";
+    bool      doUseThreshold = false;
+    double    threshold = 0.;
     Calendar *fileDateTime;
     Calendar *startDateTime;
     Calendar *endDateTime;

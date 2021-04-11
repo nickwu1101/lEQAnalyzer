@@ -78,6 +78,7 @@ void makePlots::makeHistoCh0() {
 		dr->setQuantity(quantity);
 		dr->setStartDateTime(dtStart->getDateTime());
 		dr->setEndDateTime(dtEnd->getDateTime());
+		dr->setThreshold(true, 0.3);
 		dr->runFillingLoop(hCh0, 0);
 	    }
 	}

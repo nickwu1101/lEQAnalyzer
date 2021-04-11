@@ -1,7 +1,9 @@
+csv/*
 data/*
 tdms/*
 yaml/*
 analyzedFile/*
+ready/*
 obj_file/*
 plotting/*
 go

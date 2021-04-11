@@ -3,9 +3,12 @@
 
 #include "makePlots.h"
 #include "StatisticTools.h"
+#include "Overlap.h"
+#include "TempHumi.h"
 
 void main_test();
 void main_makePlots();
+void main_overlap();
 void main_help();
 
 int anaType = 0;
@@ -34,6 +37,10 @@ int main(int argc, char** argv) {
 	    anaType = 1;
 	    break;
 	}
+	else if(arg == "-o" || arg == "--overlap") {
+	    anaType = 2;
+	    break;
+	}
 	else {
 	    std::cout << "Unknown option ... print usage" << std::endl;
 	    anaType = -1;
@@ -52,6 +59,9 @@ int main(int argc, char** argv) {
     case 1:
 	main_makePlots();
 	break;
+    case 2:
+	main_overlap();
+	break;
     }
 
     return 0;
@@ -59,7 +69,9 @@ int main(int argc, char** argv) {
 
 void main_test() {
     //makePlots *testObj = new makePlots();
-    StatisticTools *testObj = new StatisticTools();
+    //StatisticTools *testObj = new StatisticTools();
+    //Overlap *testObj = new Overlap();
+    TempHumi *testObj = new TempHumi();
     testObj->test();
 }
 
@@ -67,6 +79,11 @@ void main_makePlots() {
     makePlots *mp = new makePlots();
     mp->setAnaType(anaType);
     mp->execute();
+}
+
+void main_overlap() {
+    Overlap *ol = new Overlap();
+    ol->execute();
 }
 
 void main_help() {
