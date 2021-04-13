@@ -16,6 +16,7 @@ public:
 
 private:
     vector<string> fileList;
+    string fittingType = "Minuit";
 
     void fit1();
 };
