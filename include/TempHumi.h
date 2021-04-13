@@ -7,9 +7,9 @@
 #include <map>
 #include <vector>
 
-class Calendar;
-
 using namespace std;
+
+class Calendar;
 
 class TempHumi {
 public:
@@ -31,6 +31,7 @@ private:
 
     Calendar *startDateTime;
     Calendar *endDateTime;
+    string timeLengthOfHist;
 
     double calAvgTemp(string);
     double calAvgHumi(string);

@@ -1,5 +1,5 @@
-StartTime: 20210408000000
-intervalHour: 1
-intervalMinute: 0
+StartTime: 20201222153000
+intervalHour: 0
+intervalMinute: 30
 intervalSecond: 0
-NumberOfTaking: 72
+NumberOfTaking: 5

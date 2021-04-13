@@ -50,7 +50,7 @@ void Overlap::doProcedure1() {
     hLab923->Draw("HIST SAME");
     hHLStat->Draw("HIST SAME");
 
-    gPad->SetLogy(true);
+    gPad->SetLogy(0);
 
     hLab201->SetTitle("Background at Three Different Location in 30 Minutes");
     hLab201->SetStats(kFALSE);
