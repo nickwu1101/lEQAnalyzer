@@ -9,6 +9,7 @@
 void main_test();
 void main_makePlots();
 void main_overlap();
+void main_tempHumiPlots();
 void main_help();
 
 int anaType = 0;
@@ -41,6 +42,10 @@ int main(int argc, char** argv) {
 	    anaType = 2;
 	    break;
 	}
+	else if(arg == "-th" || arg == "--tempHumi") {
+	    anaType = 3;
+	    break;
+	}
 	else {
 	    std::cout << "Unknown option ... print usage" << std::endl;
 	    anaType = -1;
@@ -61,6 +66,9 @@ int main(int argc, char** argv) {
 	break;
     case 2:
 	main_overlap();
+	break;
+    case 3:
+	main_tempHumiPlots();
 	break;
     }
 
@@ -84,6 +92,11 @@ void main_makePlots() {
 void main_overlap() {
     Overlap *ol = new Overlap();
     ol->execute();
+}
+
+void main_tempHumiPlots() {
+    TempHumi *th = new TempHumi();
+    th->execute();
 }
 
 void main_help() {

@@ -23,6 +23,8 @@ public:
 
     void setEndDateTime(string);
     void setStartDateTime(string);
+    void setTimeLengthOfGraph(string inputStr) { timeLengthOfGraph = inputStr; };
+    void setTimeUnit(string inputStr) { timeUnit = inputStr; };
 
 private:
     vector<string> dataList;
@@ -31,12 +33,14 @@ private:
 
     Calendar *startDateTime;
     Calendar *endDateTime;
-    string timeLengthOfHist;
+    string    timeLengthOfGraph;
+    string    timeUnit;
 
-    double calAvgTemp(string);
-    double calAvgHumi(string);
-    void   doTempHumiMap();
-    void   prepareDataList();
+    double    calAvgTemp(string);
+    double    calAvgHumi(string);
+    void      doTempHumiMap();
+    void      assignTimeInterval();
+    void      prepareDataList();
 };
 
 #endif
