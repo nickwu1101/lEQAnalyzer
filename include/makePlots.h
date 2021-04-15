@@ -43,6 +43,7 @@ private:
     string quantity = "Voltage";
 
     TFile* outfile = nullptr;
+    string filename = "";
     int    anaType;
     bool   isInit = false;
 

@@ -322,6 +322,9 @@ void makePlots::assignTimeIntervals() {
 	
 	getline(intervalFile, line);
 	if(!line.empty()) {
+	    if(line.find(":") == string::npos)
+		continue;
+
 	    startline = line.substr(0, line.find_first_of("-"));
 	    endline = line.substr(line.find_first_of("-"));
 
@@ -337,6 +340,7 @@ void makePlots::assignTimeIntervals() {
 void makePlots::assignSingleLengthOfIntervals() {
     GetExterSet ges { "recordDoc/SingleLengthOfInterval.txt" };
 
+    filename = ges.giveStrVar("Filename");
     string startline = ges.giveStrVar("StartTime");
     int interHour = ges.giveIntVar("intervalHour");
     int interMin = ges.giveIntVar("intervalMinute");
