@@ -45,6 +45,7 @@ private:
     TFile* outfile = nullptr;
     string filename = "";
     int    anaType;
+    bool   isFileSet = false;
     bool   isInit = false;
 
     void initialize();

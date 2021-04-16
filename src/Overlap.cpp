@@ -42,9 +42,9 @@ void Overlap::doProcedure1() {
     TFile* fLab201 = new TFile("ready/bkg_lab201.root");
     TFile* fHLStat = new TFile("ready/bkg_HL0409.root");
 
-    TH1D* hLab923 = (TH1D*)fLab923->Get("20210313/003000");
-    TH1D* hLab201 = (TH1D*)fLab201->Get("20201222/153000");
-    TH1D* hHLStat = (TH1D*)fHLStat->Get("20210409/003000");
+    TH1D* hLab923 = (TH1D*)fLab923->Get("HistoCh0/20210313/003000");
+    TH1D* hLab201 = (TH1D*)fLab201->Get("HistoCh0/20201222/153000");
+    TH1D* hHLStat = (TH1D*)fHLStat->Get("HistoCh0/20210409/003000");
 
     hLab201->Draw("HIST");
     hLab923->Draw("HIST SAME");

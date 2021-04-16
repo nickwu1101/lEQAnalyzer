@@ -36,6 +36,7 @@ void makePlots::initialize() {
 	    assignSingleLengthOfIntervals();
 	}
 
+	prepareOutputFile(filename);
 	isInit = true;
     }
 }
@@ -46,13 +47,13 @@ void makePlots::execute() {
     makeHistoCh0();
     makeHistoCh1();
     doCoincidence(0, 1, 0.0055);
+    outfile->Close();
 }
 
 
 
 void makePlots::makeHistoCh0() {
     initialize();
-    prepareOutputFile("HistoCh0");
 
     for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
 	bool willBeDealed = false;
@@ -61,8 +62,14 @@ void makePlots::makeHistoCh0() {
 
 	TH1D* hCh0 = new TH1D(dtStart->getTime().c_str(), "Maximum as Amplitude of Channel 0", bin[0], min[0], max[0]);
 
-	if(outfile->GetDirectory(dtStart->getDate().c_str()) == nullptr)
-	    outfile->mkdir(dtStart->getDate().c_str(), dtStart->getDate().c_str());
+	string folderName = "HistoCh0";
+	if(outfile->GetDirectory(folderName.c_str()) == nullptr)
+	    outfile->mkdir(folderName.c_str());
+
+	char histoPath[150];
+	sprintf(histoPath, "%s/%s", folderName.c_str(), dtStart->getDate().c_str());
+	if(outfile->GetDirectory(histoPath) == nullptr)
+	    outfile->mkdir(histoPath, histoPath);
 
 	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
 
@@ -90,18 +97,15 @@ void makePlots::makeHistoCh0() {
 
 	hCh0->SetYTitle("Entries");
 
-	outfile->cd(dtStart->getDate().c_str());
+	outfile->cd(histoPath);
 	hCh0->Write();
     }
-
-    outfile->Close();
 }
 
 
 
 void makePlots::makeHistoCh1() {
     initialize();
-    prepareOutputFile("HistoCh1");
 
     for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
 	bool willBeDealed = false;
@@ -110,8 +114,14 @@ void makePlots::makeHistoCh1() {
 
 	TH1D* hCh1 = new TH1D(dtStart->getTime().c_str(), "Maximum as Amplitude of Channel 1", bin[1], min[1], max[1]);
 
-	if(outfile->GetDirectory(dtStart->getDate().c_str()) == nullptr)
-	    outfile->mkdir(dtStart->getDate().c_str(), dtStart->getDate().c_str());
+	string folderName = "HistoCh1";
+	if(outfile->GetDirectory(folderName.c_str()) == nullptr)
+	    outfile->mkdir(folderName.c_str());
+
+	char histoPath[150];
+	sprintf(histoPath, "%s/%s", folderName.c_str(), dtStart->getDate().c_str());
+	if(outfile->GetDirectory(histoPath) == nullptr)
+	    outfile->mkdir(histoPath, histoPath);
 
 	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
 
@@ -134,18 +144,15 @@ void makePlots::makeHistoCh1() {
 	hCh1->SetXTitle("Voltage (V)");
 	hCh1->SetYTitle("Entries");
 
-	outfile->cd(dtStart->getDate().c_str());
+	outfile->cd(histoPath);
 	hCh1->Write();
     }
-
-    outfile->Close();
 }
 
 
 
 void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
     initialize();
-    prepareOutputFile("Coincidence");
 
     for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
 	bool willBeDealed = false;
@@ -154,8 +161,14 @@ void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
 
 	TH1D* hGoal = new TH1D(dtStart->getTime().c_str(), "Coincidence", bin[goalCh], min[goalCh], max[goalCh]);
 
-	if(outfile->GetDirectory(dtStart->getDate().c_str()) == nullptr)
-	    outfile->mkdir(dtStart->getDate().c_str(), dtStart->getDate().c_str());
+	string folderName = "Coincidence";
+	if(outfile->GetDirectory(folderName.c_str()) == nullptr)
+	    outfile->mkdir(folderName.c_str());
+
+	char histoPath[150];
+	sprintf(histoPath, "%s/%s", folderName.c_str(), dtStart->getDate().c_str());
+	if(outfile->GetDirectory(histoPath) == nullptr)
+	    outfile->mkdir(histoPath, histoPath);
 
 	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
 
@@ -182,11 +195,9 @@ void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
 
 	hGoal->SetYTitle("Entries");
 
-	outfile->cd(dtStart->getDate().c_str());
+	outfile->cd(histoPath);
 	hGoal->Write();
     }
-
-    outfile->Close();
 }
 
 
@@ -298,6 +309,8 @@ void makePlots::prepareDataList() {
 
 
 void makePlots::prepareOutputFile(string outfileName) {
+    //if(isFileSet) return;
+
     char outputFilename[200];
     sprintf(outputFilename, "analyzedFile/%s.root", outfileName.c_str());
     if(outfile == nullptr)
@@ -322,7 +335,7 @@ void makePlots::assignTimeIntervals() {
 	
 	getline(intervalFile, line);
 	if(!line.empty()) {
-	    if(line.find(":") == string::npos)
+	    if(line.find(":") != string::npos)
 		continue;
 
 	    startline = line.substr(0, line.find_first_of("-"));
@@ -334,6 +347,9 @@ void makePlots::assignTimeIntervals() {
     }
 
     intervalFile.close();
+
+    GetExterSet ges { "recordDoc/timeIntervalList.txt" };
+    filename = ges.giveStrVar("Filename");
 }
 
 
