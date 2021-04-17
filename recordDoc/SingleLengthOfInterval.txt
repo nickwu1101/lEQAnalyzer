@@ -1,6 +1,6 @@
-Filename: bkg_lab201
-StartTime: 20201222153000
-intervalHour: 0
-intervalMinute: 30
+Filename: 0404to0415aHistPDay
+StartTime: 20210404000000
+intervalHour: 24
+intervalMinute: 0
 intervalSecond: 0
-NumberOfTaking: 5
+NumberOfTaking: 11

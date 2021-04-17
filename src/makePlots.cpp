@@ -45,8 +45,8 @@ void makePlots::initialize() {
 
 void makePlots::execute() {
     makeHistoCh0();
-    makeHistoCh1();
-    doCoincidence(0, 1, 0.0055);
+    //makeHistoCh1();
+    //doCoincidence(0, 1, 0.0055);
     outfile->Close();
 }
 
@@ -341,7 +341,7 @@ void makePlots::assignTimeIntervals() {
 	    startline = line.substr(0, line.find_first_of("-"));
 	    endline = line.substr(line.find_first_of("-"));
 
-	    startDateTime.push_back(startline.substr(0, startline.find_last_not_of(" -")));
+	    startDateTime.push_back(startline.substr(0, startline.find_last_not_of(" -") + 1));
 	    endDateTime.push_back(endline.substr(endline.find_first_not_of(" -")));
 	}
     }

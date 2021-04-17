@@ -1,4 +1,4 @@
-#include "Overlap.h"
+#include "Handling.h"
 
 #include <TCanvas.h>
 #include <TFile.h>
@@ -7,21 +7,21 @@
 
 #include <fstream>
 
-Overlap::Overlap() {}
+Handling::Handling() {}
 
 
 
-Overlap::~Overlap() {}
+Handling::~Handling() {}
 
 
 
-void Overlap::execute() {
+void Handling::execute() {
     doProcedure1();
 }
 
 
 
-void Overlap::test() {
+void Handling::test() {
     TCanvas* c = new TCanvas("c", "c", 1400, 800);
     TFile* f1 = new TFile("ready/bkg_HL0409.root");
 
@@ -34,9 +34,9 @@ void Overlap::test() {
 
 
 
-void Overlap::doProcedure1() {
-    TCanvas *c = new TCanvas("c", "c", 1400, 800);
-    TLegend *legend = new TLegend(0.5, 0.5, 0.9, 0.9);
+void Handling::doProcedure1() {
+    TCanvas* c = new TCanvas("c", "c", 1400, 800);
+    TLegend* legend = new TLegend(0.5, 0.5, 0.9, 0.9);
 
     TFile* fLab923 = new TFile("ready/bkg_lab923.root");
     TFile* fLab201 = new TFile("ready/bkg_lab201.root");
@@ -78,7 +78,28 @@ void Overlap::doProcedure1() {
 
 
 
-void Overlap::readFilenameListTxt(string inputTxtFile) {
+void Handling::doProcedure2() {
+    TCanvas* c = new TCanvas("c", "c", 1400, 800);
+    TLegend* legend = new TLegend(0.5, 0.5, 0.9, 0.9);
+
+    TFile* f1Hist = new TFile("ready/0404to0415oneHist.root");
+    TFile* f1HpD = new TFile("ready/0404to0415aHistPDay.root");
+
+    TH1D* h1Hist = (TH1D*)f1Hist->Get("HistoCh0/20210404/000000");
+    TH1D* h1HpD = (TH1D*)f1HpD->Get("HistoCh0/20210404/000000");
+
+    f1Hist->Close();
+    f1HpD->Close();
+}
+
+
+
+void Handling::doProcedure3() {
+}
+
+
+
+void Handling::readFilenameListTxt(string inputTxtFile) {
     ifstream filenameListTxt;
     filenameListTxt.open(inputTxtFile.c_str());
 

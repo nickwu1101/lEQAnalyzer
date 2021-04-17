@@ -3,7 +3,7 @@
 
 #include "makePlots.h"
 #include "StatisticTools.h"
-#include "Overlap.h"
+#include "Handling.h"
 #include "TempHumi.h"
 
 void main_test();
@@ -90,8 +90,8 @@ void main_makePlots() {
 }
 
 void main_overlap() {
-    Overlap *ol = new Overlap();
-    ol->execute();
+    Handling *hd = new Handling();
+    hd->execute();
 }
 
 void main_tempHumiPlots() {
