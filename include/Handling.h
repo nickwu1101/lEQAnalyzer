@@ -6,22 +6,30 @@
 
 using namespace std;
 
+class TH1D;
+class TGraph;
+
 class Handling {
 public:
     Handling();
     ~Handling();
 
-    void execute();
-    void test();
+    void   execute();
+    void   test();
 
-    void doProcedure1(); // Overlap
-    void doProcedure2();
-    void doProcedure3();
+    void   doProcedure1(); // Overlap
+    void   doProcedure2();
+    void   doProcedure3();
 
 private:
     vector<string> filenameList;
 
-    void readFilenameListTxt(string);
+    void   readFilenameListTxt(string);
+    void   setGraphAtt(TGraph*, string);
+    string giveTermLabel(string);
+    string givePeakLabel(string);
+    string giveTimeUnitLabel(string);
+    void   setRangeUser(TGraph*, string, string);
 };
 
 #endif

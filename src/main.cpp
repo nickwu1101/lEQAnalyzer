@@ -78,8 +78,8 @@ int main(int argc, char** argv) {
 void main_test() {
     //makePlots *testObj = new makePlots();
     //StatisticTools *testObj = new StatisticTools();
-    //Overlap *testObj = new Overlap();
-    TempHumi *testObj = new TempHumi();
+    Handling *testObj = new Handling();
+    //TempHumi *testObj = new TempHumi();
     testObj->test();
 }
 
