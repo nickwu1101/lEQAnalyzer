@@ -6,6 +6,7 @@
 
 using namespace std;
 
+class PeakFitter;
 class TH1D;
 class TGraph;
 
@@ -25,11 +26,12 @@ private:
     vector<string> filenameList;
 
     void   readFilenameListTxt(string);
-    void   setGraphAtt(TGraph*, string);
+    void   setGraphAtt(TGraph*, string, string);
     string giveTermLabel(string);
     string givePeakLabel(string);
     string giveTimeUnitLabel(string);
     void   setRangeUser(TGraph*, string, string);
+    void   adjustFittingRange(string, string, PeakFitter*);
 };
 
 #endif

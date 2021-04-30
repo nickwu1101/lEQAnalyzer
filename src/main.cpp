@@ -10,6 +10,8 @@ void main_test();
 void main_makePlots();
 void main_overlap();
 void main_tempHumiPlots();
+void main_longAnalysis();
+void main_checkFitting();
 void main_help();
 
 int anaType = 0;
@@ -46,6 +48,14 @@ int main(int argc, char** argv) {
 	    anaType = 3;
 	    break;
 	}
+	else if(arg == "-l" || arg == "--long") {
+	    anaType = 4;
+	    break;
+	}
+	else if(arg == "-ch" || arg == "--check") {
+	    anaType = 5;
+	    break;
+	}
 	else {
 	    std::cout << "Unknown option ... print usage" << std::endl;
 	    anaType = -1;
@@ -70,6 +80,12 @@ int main(int argc, char** argv) {
     case 3:
 	main_tempHumiPlots();
 	break;
+    case 4:
+	main_longAnalysis();
+	break;
+    case 5:
+	main_checkFitting();
+	break;
     }
 
     return 0;
@@ -91,12 +107,22 @@ void main_makePlots() {
 
 void main_overlap() {
     Handling *hd = new Handling();
-    hd->execute();
+    hd->doProcedure1();
 }
 
 void main_tempHumiPlots() {
     TempHumi *th = new TempHumi();
     th->execute();
+}
+
+void main_longAnalysis() {
+    Handling *hd = new Handling();
+    hd->doProcedure2();
+}
+
+void main_checkFitting() {
+    Handling *hd = new Handling();
+    hd->doProcedure3();
 }
 
 void main_help() {

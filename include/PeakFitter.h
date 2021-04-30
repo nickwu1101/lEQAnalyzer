@@ -4,6 +4,10 @@
 #include <iostream>
 #include <vector>
 
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
+#include <TMath.h>
+
 using namespace std;
 
 class TH1D;
@@ -13,41 +17,60 @@ public:
     PeakFitter(TH1D*, string);
     ~PeakFitter();
 
-    void execute();
-    void test();
+    void   execute();
+    void   test();
 
-    void setHistogram(TH1D* inputH)     { histogram = inputH; };
-    void setPeakType(string);
-    void setFitterStr(string inputStr)  { fitterStr = inputStr; };
+    void   setHistogram(TH1D* inputH)     { histogram = inputH; };
+    void   setPeakType(string);
+    void   setFitterStr(string inputStr)  { fitterStr = inputStr; };
+    void   setNeedZoom(bool inputBool)    { needZoom = inputBool; };
 
-    void setOutputGraphFilename();
-    void setFolderPath(string);
-    void setHistoName(string);
+    void   setOutputGraphFilename();
+    void   setFolderPath(string);
+    void   setHistoName(string);
 
-    void setRange(double up, double low) {
+    void   setRange(double low, double up) {
 	upperRange = up; lowerRange = low; };
-    void setCExp(double start, double up, double low) {
-	startCExp = start; upperCExp = up; lowerCExp = low; cExp = start; };
-    void setExpo(double start, double up, double low) {
-	startExpo = start; upperExpo = up; lowerExpo = low; expo = start; };
-    void setCGauss(double start, double up, double low) {
-	startCGauss = start; upperCGauss = up; lowerCGauss = low; cGauss = start; };
-    void setMean(double start, double up, double low) {
-	startMean = start; upperMean = up; lowerMean = low; mean = start; };
-    void setSTD(double start, double up, double low) {
-	startSTD = start; upperSTD = up; lowerSTD = low; std = start; };
+    void   setCPow(double start, double low, double up) {
+	startCPow = start; upperCPow = up; lowerCPow = low; };
+    void   setCExp(double, double, double);
+    void   setExpo(double start, double low, double up) {
+	startExpo = start; upperExpo = up; lowerExpo = low; };
+    void   setCGauss(double start, double low, double up) {
+	startCGauss = start; upperCGauss = up; lowerCGauss = low; };
+    void   setMean(double start, double low, double up) {
+	startMean = start; upperMean = up; lowerMean = low; };
+    void   setSTD(double start, double low, double up) {
+	startSTD = start; upperSTD = up; lowerSTD = low; };
 
-    double getChi2()    { return chi2; };
-    double getCExp()    { return cExp; };
-    double getExpo()    { return expo; };
-    double getCGauss()  { return cGauss; };
-    double getMean()    { return mean; };
-    double getSTD()     { return std; };
-    double getRatioSM() { return ratioSM; };
-    double getError()   { return errM; };
+    double getChi2();
+    double getCPow();
+    double getCExp();
+    double getExpo();
+    double getCGauss();
+    double getMean();
+    double getSTD();
+    double getRatioSM();
+    double getErrorCGaus();
+    double getErrorM();
 
-    void fitPeak();
+    void   getSetRange(double& low, double& up) {
+	low = lowerRange; up = upperRange; };
+    void   getSetCPow(double& start, double& low, double& up) {
+	start = startCPow; low = lowerCPow; up = upperCPow; };
+    void   getSetCExp(double&, double&, double&);
+    void   getSetExpo(double& start, double& low, double& up) {
+	start = startExpo; low = lowerExpo; up = upperExpo; };
+    void   getSetCGauss(double& start, double& low, double& up) {
+	start = startCGauss;  low = lowerCGauss; up = upperCGauss; };
+    void   getSetMean(double& start, double& low, double& up) {
+	start = startMean; low = lowerMean; up = upperMean; };
+    void   getSetSTD(double& start, double& low, double& up) {
+	start = startSTD; low = lowerSTD; up = upperSTD; };
+
+    void   fitPeak();
     double getAssignedValue(string);
+    double getAssignedError(string);
 
 private:
     vector<string> fileList;
@@ -56,17 +79,20 @@ private:
     string fittingType = "Minuit";
     string peakType;
     string fitterStr;
+    bool   needZoom;
 
     string outputGraphFilename;
     string folderPath;
     string histoName;
 
+    TFitResultPtr fitptr;
+
     double upperRange;
     double lowerRange;
 
-    double startCExp;
-    double upperCExp;
-    double lowerCExp;
+    double startCPow;
+    double upperCPow;
+    double lowerCPow;
 
     double startExpo;
     double upperExpo;
@@ -84,14 +110,7 @@ private:
     double upperSTD;
     double lowerSTD;
 
-    double chi2;
-    double cExp;
-    double expo;
-    double cGauss;
-    double mean;
-    double std;
     double ratioSM;
-    double errM;
 };
 
 #endif
