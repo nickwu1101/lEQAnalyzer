@@ -22,6 +22,8 @@ public:
     void   doProcedure2();
     void   doProcedure3();
 
+    void   checkHist();
+
 private:
     vector<string> filenameList;
 

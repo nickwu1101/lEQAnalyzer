@@ -1,6 +1,6 @@
-Filename: 0313to0315aHistP01h
-StartTime: 20210313003000
+Filename: 0418to0504aHistP01h
+StartTime: 20210419000000
 intervalHour: 1
 intervalMinute: 0
 intervalSecond: 0
-NumberOfTaking: 59
+NumberOfTaking: 384

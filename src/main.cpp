@@ -122,7 +122,7 @@ void main_longAnalysis() {
 
 void main_checkFitting() {
     Handling *hd = new Handling();
-    hd->doProcedure3();
+    hd->checkHist();
 }
 
 void main_help() {

@@ -34,6 +34,9 @@ void PeakFitter::test() {}
 
 
 void PeakFitter::fitPeak() {
+    if(peakType == "expo")
+	return;
+
     TCanvas* c = new TCanvas("c", "c", 1400, 800);
 
     TF1* peak = new TF1("peak", fitterStr.c_str(), 0., 5.);
@@ -100,6 +103,58 @@ void PeakFitter::fitPeak() {
 
 
 
+void PeakFitter::fitBkg() {
+    if(peakType != "expo")
+	return;
+
+    TCanvas* c = new TCanvas("c", "c", 1400, 800);
+
+    TF1* bkg = new TF1("bkg", fitterStr.c_str(), 0., 5.);
+
+    bkg->SetRange(lowerRange, upperRange);
+    bkg->SetParameter(0, startCPow);
+    bkg->SetParameter(1, startExpo);
+
+    bkg->SetParLimits(0, lowerCPow, upperCPow);
+    bkg->SetParLimits(1, lowerExpo, upperExpo);
+
+    if(needZoom)
+	histogram->GetXaxis()->SetRangeUser(0.9*lowerRange, 1.1*upperRange);
+
+    fitptr = histogram->Fit(bkg, "S", "", lowerRange, upperRange);
+
+    histogram->SetStats(kFALSE);
+
+    c->Update();
+    double xleft = 0.75;
+    double ydown = 0.4;
+    TPaveText* pt = new TPaveText(xleft*gPad->GetUxmax()
+				  + (1 - xleft)*gPad->GetUxmin(),
+				  ydown*gPad->GetUymax()
+				  + (1 - ydown)*gPad->GetUymin(),
+				  gPad->GetUxmax(), gPad->GetUymax());
+
+    char line[100];
+    pt->AddText("Statistics");
+    sprintf(line, "Chi2: %f", fitptr->Chi2());
+    pt->AddText(line);
+    sprintf(line, "cPow: %f", fitptr->Parameter(0));
+    pt->AddText(line);
+    sprintf(line, "cExp: %f", TMath::Exp(fitptr->Parameter(0)));
+    pt->AddText(line);
+    sprintf(line, "Expo: %f", fitptr->Parameter(1));
+    pt->AddText(line);
+    pt->Draw();
+
+    c->Update();
+    c->Print(outputGraphFilename.c_str());
+    c->Close();
+
+    delete c;
+}
+
+
+
 void PeakFitter::setPeakType(string inputStr) {
     peakType = inputStr;
 
@@ -121,6 +176,12 @@ void PeakFitter::setPeakType(string inputStr) {
 	setCGauss(1000., 0., 100000000.);
 	setMean(0.725, 0.7, 0.75);
 	setSTD(0.01, 0., 0.1);
+    } else if(peakType == "expo") {
+	setFolderPath("plotting/fittingHualien");
+
+	setRange(0.4, 0.9);
+	setCPow(10., -100., 100.);
+	setExpo(-3., -1000., 0.);
     }
 }
 

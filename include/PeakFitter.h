@@ -69,6 +69,7 @@ public:
 	start = startSTD; low = lowerSTD; up = upperSTD; };
 
     void   fitPeak();
+    void   fitBkg();
     double getAssignedValue(string);
     double getAssignedError(string);
 

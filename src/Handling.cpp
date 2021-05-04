@@ -424,6 +424,11 @@ void Handling::doProcedure2() {
 
 
 void Handling::doProcedure3() {
+}
+
+
+
+void Handling::checkHist() {
     TFile *f = new TFile("ready/0404to0415aHistP01h.root", "READ");
     TDirectory* dirCh0 = f->GetDirectory("HistoCh0");
     TDirectory* dirDate = dirCh0->GetDirectory("20210407");
@@ -433,12 +438,13 @@ void Handling::doProcedure3() {
     sprintf(histTitle, "%s%s_forCheck", dirDate->GetName(), h->GetName());
     h->SetTitle(histTitle);
 
-    string fitPeak = "K40";
+    string fitPeak = "expo";
     PeakFitter* pf = new PeakFitter(h, fitPeak);
+    pf->setFitterStr("expo");
     pf->setHistoName(histTitle);
     pf->setFolderPath("plotting/fittingHualien");
-    pf->setNeedZoom(true);
-    pf->fitPeak();
+    pf->setNeedZoom(false);
+    pf->fitBkg();
 
     f->Close();
 }
