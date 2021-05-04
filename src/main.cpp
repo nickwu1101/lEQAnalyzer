@@ -123,6 +123,7 @@ void main_longAnalysis() {
 void main_checkFitting() {
     Handling *hd = new Handling();
     hd->checkHist();
+    hd->overlapForComparison();
 }
 
 void main_help() {

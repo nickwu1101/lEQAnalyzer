@@ -23,6 +23,7 @@ public:
     void   doProcedure3();
 
     void   checkHist();
+    void   overlapForComparison();
 
 private:
     vector<string> filenameList;

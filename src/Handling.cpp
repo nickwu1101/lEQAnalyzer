@@ -148,8 +148,8 @@ void Handling::doProcedure2() {
 
     timeUnitList.push_back("P11D");
     timeUnitList.push_back("PD");
-    //timeUnitList.push_back("P12H");
-    //timeUnitList.push_back("P6H");
+    timeUnitList.push_back("P12H");
+    timeUnitList.push_back("P6H");
     //timeUnitList.push_back("P1H");
 
     map<string, TF1*> f;
@@ -163,7 +163,7 @@ void Handling::doProcedure2() {
 		string setName = "f" + termList[iTerm] + peakList[iPeak] + timeUnitList[iTU];
 
 		if(timeUnitList[iTU] == "P11D")
-		    f[mapLabel] = new TF1(setName.c_str(), "[0]", 0., 11.);
+		    f[mapLabel] = new TF1(setName.c_str(), "[0]", 0., 16.);
 		else if(timeUnitList[iTU] == "PD"
 			|| timeUnitList[iTU] == "P12H"
 			|| timeUnitList[iTU] == "P6H"
@@ -181,13 +181,13 @@ void Handling::doProcedure2() {
 	TFile* file = nullptr;
 	string thisTU = timeUnitList[iTU];
 	if(thisTU == "P11D")
-	    file = new TFile("ready/0404to0415oneHist.root", "READ");
+	    file = new TFile("ready/0418to0504oneHist.root", "READ");
 	else if(thisTU == "PD")
-	    file = new TFile("ready/0404to0415aHistPDay.root", "READ");
+	    file = new TFile("ready/0418to0504aHistPDay.root", "READ");
 	else if(thisTU == "P12H")
-	    file = new TFile("ready/0404to0415aHistP12h.root", "READ");
+	    file = new TFile("ready/0418to0504aHistP12h.root", "READ");
 	else if(thisTU == "P6H")
-	    file = new TFile("ready/0404to0415aHistP06h.root", "READ");
+	    file = new TFile("ready/0418to0504aHistP06h.root", "READ");
 	else if(thisTU == "P1H")
 	    file = new TFile("ready/0404to0415aHistP01h.root", "READ");
 
@@ -429,7 +429,7 @@ void Handling::doProcedure3() {
 
 
 void Handling::checkHist() {
-    TFile *f = new TFile("ready/0404to0415aHistP01h.root", "READ");
+    TFile* f = new TFile("ready/0404to0415aHistP01h.root", "READ");
     TDirectory* dirCh0 = f->GetDirectory("HistoCh0");
     TDirectory* dirDate = dirCh0->GetDirectory("20210407");
     TH1D* h = (TH1D*)dirDate->Get("190000");
@@ -445,6 +445,28 @@ void Handling::checkHist() {
     pf->setFolderPath("plotting/fittingHualien");
     pf->setNeedZoom(false);
     pf->fitBkg();
+
+    f->Close();
+}
+
+
+
+void Handling::overlapForComparison() {
+    TCanvas* c = new TCanvas("c", "c", 1400, 800);
+    TFile* f = new TFile("ready/0404to0415aHistP01h.root", "READ");
+    TDirectory* dirCh0 = f->GetDirectory("HistoCh0");
+    TDirectory* dirDate = dirCh0->GetDirectory("20210407");
+    TH1D* h = (TH1D*)dirDate->Get("190000");
+    TF1* fBkg = new TF1("fBkg", "expo", 0., 5.);
+
+    fBkg->SetParameter(0, 8.6);
+    fBkg->SetParameter(1, -2.75);
+
+    h->Draw("HISTO");
+    fBkg->Draw("SAME");
+
+    c->Update();
+    c->Print("plotting/fittingHualien/overlapForComparison.png");
 
     f->Close();
 }
