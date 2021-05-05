@@ -87,6 +87,8 @@ void makePlots::makeHistoCh0() {
 		dr->setEndDateTime(dtEnd->getDateTime());
 		dr->setThreshold(true, 0.3);
 		dr->runFillingLoop(hCh0, 0);
+
+		delete dr;
 	    }
 	}
 
@@ -99,6 +101,10 @@ void makePlots::makeHistoCh0() {
 
 	outfile->cd(histoPath);
 	hCh0->Write();
+
+	delete dtStart;
+	delete dtEnd;
+	delete hCh0;
     }
 }
 
@@ -138,6 +144,8 @@ void makePlots::makeHistoCh1() {
 		dr->setStartDateTime(dtStart->getDateTime());
 		dr->setEndDateTime(dtEnd->getDateTime());
 		dr->runFillingLoop(hCh1, 1);
+
+		delete dr;
 	    }
 	}
 
@@ -146,6 +154,10 @@ void makePlots::makeHistoCh1() {
 
 	outfile->cd(histoPath);
 	hCh1->Write();
+
+	delete dtStart;
+	delete dtEnd;
+	delete hCh1;
     }
 }
 
@@ -185,6 +197,8 @@ void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
 		dr->setStartDateTime(dtStart->getDateTime());
 		dr->setEndDateTime(dtEnd->getDateTime());
 		dr->runCoincidenceFilling(hGoal, goalCh, threshold);
+
+		delete dr;
 	    }
 	}
 
@@ -197,6 +211,10 @@ void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
 
 	outfile->cd(histoPath);
 	hGoal->Write();
+
+	delete dtStart;
+	delete dtEnd;
+	delete hGoal;
     }
 }
 
@@ -230,6 +248,9 @@ void makePlots::test() {
     
 
     //execute(0);
+
+    delete c1;
+    delete c2;
 }
 
 
@@ -383,7 +404,13 @@ bool makePlots::hasDataInInterval(string inputDTStr, string startDTStr, string e
     } else {
 	Calendar *dtNext = new Calendar(nextDTStr);
 	return hasDataInInterval(dtData, dtStart, dtEnd, dtNext);
+
+	delete dtNext;
     }
+
+    delete dtData;
+    delete dtStart;
+    delete dtEnd;
 }
 
 
@@ -396,7 +423,11 @@ bool makePlots::hasDataInInterval(string inputDTStr, Calendar* startDT, Calendar
     } else {
 	Calendar *dtNext = new Calendar(nextDTStr);
 	return hasDataInInterval(dtData, startDT, endDT, dtNext);
+
+	delete dtNext;
     }
+
+    delete dtData;
 }
 
 

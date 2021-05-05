@@ -120,9 +120,17 @@ void Handling::doProcedure1() {
     legend->Draw();
 
     c->Print("plotting/overlap/bkg_overlap.png");
+
+    c->Close();
     fLab923->Close();
     fLab201->Close();
     fHLStat->Close();
+
+    delete c;
+    delete legend;
+    delete fLab923;
+    delete fLab201;
+    delete fHLStat;
 }
 
 
@@ -150,7 +158,7 @@ void Handling::doProcedure2() {
     timeUnitList.push_back("PD");
     timeUnitList.push_back("P12H");
     timeUnitList.push_back("P6H");
-    //timeUnitList.push_back("P1H");
+    timeUnitList.push_back("P1H");
 
     map<string, TF1*> f;
     map<string, TGraph*> g;
@@ -189,7 +197,7 @@ void Handling::doProcedure2() {
 	else if(thisTU == "P6H")
 	    file = new TFile("ready/0418to0504aHistP06h.root", "READ");
 	else if(thisTU == "P1H")
-	    file = new TFile("ready/0404to0415aHistP01h.root", "READ");
+	    file = new TFile("ready/0418to0504aHistP01h.root", "READ");
 
 	TDirectory* dirCh0 = file->GetDirectory("HistoCh0");
 	TList* listDate = dirCh0->GetListOfKeys();
@@ -361,11 +369,17 @@ void Handling::doProcedure2() {
 		    }
 		}
 
+		delete pf;
+		delete thisDateTime;
+
 		cout << endl << endl << endl;
 	    }
 	}
 
+	delete startDateTime;
+
 	file->Close();
+	delete file;
     }
 
 
@@ -395,8 +409,8 @@ void Handling::doProcedure2() {
 		    TGraph* thisG = g[graphLabel];
 		    thisG->Draw("AP");
 		    thisF->Draw("SAME");
-		    setGraphAtt(thisG, termList[iTerm], peakList[iPeak]);
-		    setRangeUser(thisG, termList[iTerm], peakList[iPeak]);
+		    setGraphAtt(thisG, thisTerm, thisPeak);
+		    setRangeUser(thisG, thisTerm, thisPeak, thisTU);
 		    cGraph->Update();
 		    cGraph->Print(outputFilename.c_str());
 		}
@@ -412,13 +426,25 @@ void Handling::doProcedure2() {
 		    thisGE->Draw("AP");
 		    thisF->Draw("SAME");
 		    setGraphAtt(thisGE, thisTerm, thisPeak);
-		    setRangeUser(thisGE, thisTerm, thisPeak);
+		    setRangeUser(thisGE, thisTerm, thisPeak, thisTU);
 		    cGraph->Update();
 		    cGraph->Print(outputFilename.c_str());
 		}
 	    }
 	}
     }
+
+    for(map<string, TF1*>::iterator it = f.begin(); it != f.end(); ++it)
+	delete it->second;
+
+    for(map<string, TGraph*>::iterator it = g.begin(); it != g.end(); ++it)
+	delete it->second;
+
+    for(map<string, TGraphErrors*>::iterator it = ge.begin(); it != ge.end(); ++it)
+	delete it->second;
+
+    cGraph->Close();
+    delete cGraph;
 }
 
 
@@ -447,6 +473,7 @@ void Handling::checkHist() {
     pf->fitBkg();
 
     f->Close();
+    delete f;
 }
 
 
@@ -469,6 +496,11 @@ void Handling::overlapForComparison() {
     c->Print("plotting/fittingHualien/overlapForComparison.png");
 
     f->Close();
+    c->Close();
+
+    delete fBkg;
+    delete f;
+    delete c;
 }
 
 
@@ -556,7 +588,7 @@ string Handling::giveTimeUnitLabel(string inputStr) {
 
 
 
-void Handling::setRangeUser(TGraph* inputG, string term, string peakType) {
+void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string timeUnit) {
     double upper = 1.;
     double lower = 0.;
 
@@ -578,35 +610,46 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType) {
 	}
     } else if(term == "expo") {
 	if(peakType == "K40") {
-	    upper = 0.;
+	    upper = -1.5;
 	    lower = -3.;
 	} else if(peakType == "Rn222") {
-	    upper = 0.;
+	    upper = -3.;
 	    lower = -4.;
 	}
     } else if(term == "cGauss") {
 	if(peakType == "K40") {
-	    upper = 1200.;
-	    lower = 0.;
+	    if(timeUnit == "PD") {
+		upper = 1200.;
+		lower = 1100.;
+	    } else if(timeUnit == "P12H") {
+		upper = 600.;
+		lower = 500.;
+	    } else if(timeUnit == "P6H") {
+		upper = 300.;
+		lower = 200.;
+	    } else if(timeUnit == "P1H") {
+		upper = 100.;
+		lower = 0.;
+	    }
 	} else if(peakType == "Rn222") {
 	    upper = 900.;
 	    lower = 0.;
 	}
     } else if(term == "mean") {
 	if(peakType == "K40") {
-	    upper = 2.;
-	    lower = 0.;
+	    upper = 1.6;
+	    lower = 1.5;
 	} else if(peakType == "Rn222") {
 	    upper = 0.8;
-	    lower = 0.;
+	    lower = 0.7;
 	}
     } else if(term == "std") {
 	if(peakType == "K40") {
-	    upper = 0.05;
-	    lower = 0.;
+	    upper = 0.035;
+	    lower = 0.025;
 	} else if(peakType == "Rn222") {
 	    upper = 0.035;
-	    lower = 0.;
+	    lower = 0.025;
 	}
     } else if(term == "cExp_Norm") {
 	if(peakType == "K40") {
@@ -621,8 +664,8 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType) {
 	    upper = 1.1;
 	    lower = 0.8;	    
 	} else if(peakType == "Rn222") {
-	    upper = 0.8;
-	    lower = 0.7;
+	    upper = 0.9;
+	    lower = 0.5;
 	}
     }
 

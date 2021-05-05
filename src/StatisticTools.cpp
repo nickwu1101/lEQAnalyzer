@@ -73,6 +73,8 @@ void StatisticTools::doEntriesGraphByTime() {
 	pastInterval = dr.sec/60.;
 
 	gEntry->SetPoint(gEntry->GetN(), dr.sec/60., it->second->GetEntries());
+
+	delete cPoint;
     }
     pastInterval /= histoMap.size();
 
@@ -91,6 +93,10 @@ void StatisticTools::doEntriesGraphByTime() {
 
     c->Close();
     closeFile();
+
+    delete cStart;
+    delete gEntry;
+    delete c;
 }
 
 
@@ -146,6 +152,9 @@ void StatisticTools::doPeakFitting() {
 
 	for(unsigned int i = 0; i < sizeof(g)/sizeof(g[0]); i++)
 	    g[i]->SetPoint(g[i]->GetN(), dr.sec/60., fitptr->Parameter(i));
+
+	delete signalFit;
+	delete cPoint;
     }
 
     for(unsigned int i = 0; i < sizeof(g)/sizeof(g[0]); i++) {
@@ -178,6 +187,13 @@ void StatisticTools::doPeakFitting() {
 
     c->Close();
     closeFile();
+
+    delete cStart;
+
+    for(unsigned int i = 0; i < sizeof(g)/sizeof(g[0]); i++)
+	delete g[i];
+
+    delete c;
 }
 
 
@@ -195,4 +211,6 @@ void StatisticTools::openFile() {
 
 void StatisticTools::closeFile() {
     f->Close();
+    delete f;
+    f = nullptr;
 }

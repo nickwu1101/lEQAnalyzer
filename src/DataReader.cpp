@@ -81,8 +81,12 @@ void DataReader::runFillingLoop(TH1D* inputH, int channel) {
 		else if(quantity == "Energy")
 		    inputH->Fill(V2MeV(fillValue));
 	    }
-	} else if(*eventDateTime > *endDateTime)
+	} else if(*eventDateTime > *endDateTime) {
+	    delete eventDateTime;
 	    break;
+	}
+
+	delete eventDateTime;
     }
 }
 
@@ -130,8 +134,12 @@ void DataReader::runCoincidenceFilling(TH1D* inputH, int channel, double thresho
 		else if(quantity == "Energy")
 		    inputH->Fill(V2MeV(fillValue));
 	    }
-	} else if(*eventDateTime > *endDateTime)
+	} else if(*eventDateTime > *endDateTime) {
+	    delete eventDateTime;
 	    break;
+	}
+
+	delete eventDateTime;
     }
 }
 

@@ -161,21 +161,28 @@ void TempHumi::makeTempHumiPlotting() {
 
 	thisGT->SetPoint(thisGT->GetN(), xtime, ytemp);
 	thisGH->SetPoint(thisGH->GetN(), xtime, yhumi);
+
+	delete dt;
     }
 
     f->cd("temperature");
     for(map<string, TGraph*>::iterator it = gT.begin();
 	it != gT.end(); ++it) {
 	it->second->Write();
+
+	delete it->second;
     }
 
     f->cd("humidity");
     for(map<string, TGraph*>::iterator it = gH.begin();
 	it != gH.end(); ++it) {
 	it->second->Write();
+
+	delete it->second;
     }
 
     f->Close();
+    delete f;
 }
 
 

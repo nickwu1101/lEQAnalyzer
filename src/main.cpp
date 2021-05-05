@@ -93,8 +93,8 @@ int main(int argc, char** argv) {
 
 void main_test() {
     //makePlots *testObj = new makePlots();
-    //StatisticTools *testObj = new StatisticTools();
-    Handling *testObj = new Handling();
+    StatisticTools *testObj = new StatisticTools();
+    //Handling *testObj = new Handling();
     //TempHumi *testObj = new TempHumi();
     testObj->test();
 }

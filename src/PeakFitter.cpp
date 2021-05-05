@@ -98,6 +98,8 @@ void PeakFitter::fitPeak() {
     c->Print(outputGraphFilename.c_str());
     c->Close();
 
+    delete pt;
+    delete peak;
     delete c;
 }
 
@@ -150,6 +152,8 @@ void PeakFitter::fitBkg() {
     c->Print(outputGraphFilename.c_str());
     c->Close();
 
+    delete pt;
+    delete bkg;
     delete c;
 }
 
@@ -162,8 +166,8 @@ void PeakFitter::setPeakType(string inputStr) {
 	setFolderPath("plotting/fittingHualien/K40");
 
 	setRange(1.4, 1.8);
-	setCPow(10., -100., 100.);
-	setExpo(-3., -1000., 0.);
+	setCPow(10., 5., 50.);
+	setExpo(-3., -5., 0.);
 	setCGauss(1000., 0., 100000000.);
 	setMean(1.55, 1.5, 1.65);
 	setSTD(0.01, 0., 0.1);
@@ -172,7 +176,7 @@ void PeakFitter::setPeakType(string inputStr) {
 
 	setRange(0.6, 0.84);
 	setCPow(10., -100., 100.);
-	setExpo(-3., -1000., 0.);
+	setExpo(-3., -5., 0.);
 	setCGauss(1000., 0., 100000000.);
 	setMean(0.725, 0.7, 0.75);
 	setSTD(0.01, 0., 0.1);

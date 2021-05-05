@@ -33,7 +33,7 @@ private:
     string giveTermLabel(string);
     string givePeakLabel(string);
     string giveTimeUnitLabel(string);
-    void   setRangeUser(TGraph*, string, string);
+    void   setRangeUser(TGraph*, string, string, string);
     void   adjustFittingRange(string, string, PeakFitter*);
 };
 
