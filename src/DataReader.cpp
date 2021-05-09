@@ -22,6 +22,11 @@ DataReader::DataReader(string inputProject) {
 
 DataReader::~DataReader() {
     fFile->Close();
+
+    delete endDateTime;
+    delete startDateTime;
+    delete fileDateTime;
+    delete fFile;
 }
 
 
@@ -140,6 +145,59 @@ void DataReader::runCoincidenceFilling(TH1D* inputH, int channel, double thresho
 	}
 
 	delete eventDateTime;
+    }
+}
+
+
+
+void DataReader::runFilterFilling(TH1D* inputH, int channel,
+				  double low, double up) {
+    initialize();
+
+    Long64_t nentries = fTree->GetEntries();
+
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	if(entry % 10000 == 0)
+	    cout << "Processed ... " << entry << "/" << nentries << " events" << endl;
+
+	fTree->GetEntry(entry);
+	if(instrumentCh0 != "none")
+	    ch0d = ch0;
+	else
+	    ch0d = 0.;
+
+	if(instrumentCh1 != "none")
+	    ch1d = ch1;
+	else
+	    ch1d = 0.;
+
+	double fillValue = 0.;
+	if(channel == 0)
+	    fillValue = ch0d;
+	else if(channel == 1)
+	    fillValue = ch1d;
+
+	timestampD = timestamp;
+
+	Calendar* eventDateTime = new Calendar(projectName);
+	eventDateTime->addDuration(0, 0, 0, 0, timestampD);
+
+	if(*eventDateTime >= *startDateTime
+	   && *eventDateTime <= *endDateTime) {
+	    if(!doUseThreshold || fillValue >= threshold) {
+		if(fillValue <= up && fillValue >= low) {
+		    if(quantity == "Voltage")
+			inputH->Fill(fillValue);
+		    else if(quantity == "Energy")
+			inputH->Fill(V2MeV(fillValue));
+		}
+	    } else if(*eventDateTime > *endDateTime) {
+		delete eventDateTime;
+		break;
+	    }
+
+	    delete eventDateTime;
+	}
     }
 }
 

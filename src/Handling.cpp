@@ -154,11 +154,12 @@ void Handling::doProcedure2() {
     peakList.push_back("K40");
     peakList.push_back("Rn222");
 
-    timeUnitList.push_back("P11D");
-    timeUnitList.push_back("PD");
-    timeUnitList.push_back("P12H");
-    timeUnitList.push_back("P6H");
-    timeUnitList.push_back("P1H");
+    timeUnitList.push_back("PT");
+    //timeUnitList.push_back("PD");
+    //timeUnitList.push_back("P12H");
+    //timeUnitList.push_back("P6H");
+    timeUnitList.push_back("P2H");
+    //timeUnitList.push_back("P1H");
 
     map<string, TF1*> f;
     map<string, TGraph*> g;
@@ -170,11 +171,12 @@ void Handling::doProcedure2() {
 		string mapLabel = termList[iTerm] + "," + peakList[iPeak] + "," + timeUnitList[iTU];
 		string setName = "f" + termList[iTerm] + peakList[iPeak] + timeUnitList[iTU];
 
-		if(timeUnitList[iTU] == "P11D")
+		if(timeUnitList[iTU] == "PT")
 		    f[mapLabel] = new TF1(setName.c_str(), "[0]", 0., 16.);
 		else if(timeUnitList[iTU] == "PD"
 			|| timeUnitList[iTU] == "P12H"
 			|| timeUnitList[iTU] == "P6H"
+			|| timeUnitList[iTU] == "P2H"
 			|| timeUnitList[iTU] == "P1H") {
 		    g[mapLabel] = new TGraph();
 
@@ -188,7 +190,7 @@ void Handling::doProcedure2() {
     for(unsigned int iTU = 0; iTU < timeUnitList.size(); iTU++) {
 	TFile* file = nullptr;
 	string thisTU = timeUnitList[iTU];
-	if(thisTU == "P11D")
+	if(thisTU == "PT")
 	    file = new TFile("ready/0418to0504oneHist.root", "READ");
 	else if(thisTU == "PD")
 	    file = new TFile("ready/0418to0504aHistPDay.root", "READ");
@@ -196,6 +198,8 @@ void Handling::doProcedure2() {
 	    file = new TFile("ready/0418to0504aHistP12h.root", "READ");
 	else if(thisTU == "P6H")
 	    file = new TFile("ready/0418to0504aHistP06h.root", "READ");
+	else if(thisTU == "P2H")
+	    file = new TFile("ready/0418to0504aHistP02h.root", "READ");
 	else if(thisTU == "P1H")
 	    file = new TFile("ready/0418to0504aHistP01h.root", "READ");
 
@@ -223,9 +227,9 @@ void Handling::doProcedure2() {
 
 		double alignCenter = 0.;
 		string strForTitle;
-		if(thisTU == "P11D") {
+		if(thisTU == "PT") {
 		    alignCenter = 0.;
-		    strForTitle = "per_11_days";
+		    strForTitle = "all_16_days";
 		} else if(thisTU == "PD") {
 		    alignCenter = 12.;
 		    strForTitle = "per_01_day";
@@ -235,6 +239,9 @@ void Handling::doProcedure2() {
 		} else if(thisTU == "P6H") {
 		    alignCenter = 3.;
 		    strForTitle = "per_06_hours";
+		} else if(thisTU == "P2H") {
+		    alignCenter = 1.;
+		    strForTitle = "per_02_hours";
 		} else if(thisTU == "P1H") {
 		    alignCenter = 0.5;
 		    strForTitle = "per_01_hour";
@@ -263,8 +270,8 @@ void Handling::doProcedure2() {
 		pf->setHistoName(histoName);
 		pf->fitPeak();
 
-		double cGaussForNorm = pf->getCGauss();
-		double errCGausForNorm = pf->getErrorCGaus();
+		double cGaussForNorm = pf->getCGauss(0);
+		double errCGausForNorm = pf->getErrorCGaus(0);
 		cGraph->cd();
 		hScaled->Scale(1./cGaussForNorm);
 		hScaled->Draw("HISTO");
@@ -283,16 +290,16 @@ void Handling::doProcedure2() {
 		    double keyInValue = 0.;
 		    double keyInError = 0.;
 		    if(thisTerm.find("Norm") == string::npos) {
-			keyInValue = pf->getAssignedValue(thisTerm);
-			keyInError = pf->getAssignedError(thisTerm);
+			keyInValue = pf->getAssignedValue(thisTerm, 0);
+			keyInError = pf->getAssignedError(thisTerm, 0);
 		    } else {
 			string actualTerm = thisTerm.substr(0, thisTerm.find_first_of("_"));
-			keyInValue = pf->getAssignedValue(actualTerm)/cGaussForNorm;
+			keyInValue = pf->getAssignedValue(actualTerm, 0)/cGaussForNorm;
 			if(thisTerm.find("cGauss") != string::npos) {
 			    keyInError = 0.;
 			} else {
-			    double ubar = pf->getAssignedValue(actualTerm);
-			    double usig = pf->getAssignedError(actualTerm);
+			    double ubar = pf->getAssignedValue(actualTerm, 0);
+			    double usig = pf->getAssignedError(actualTerm, 0);
 			    double vbar = cGaussForNorm;
 			    double vsig = errCGausForNorm;
 
@@ -338,13 +345,13 @@ void Handling::doProcedure2() {
 			double keyInValue = 0.;
 			double keyInError = 0.;
 			if(thisTerm.find("Norm") == string::npos) {
-			    keyInValue = pf->getAssignedValue(thisTerm);
+			    keyInValue = pf->getAssignedValue(thisTerm, 0);
 			} else {
 			    string actualTerm = thisTerm.substr(0, thisTerm.find_first_of("_"));
-			    keyInValue = pf->getAssignedValue(actualTerm)/cGaussForNorm;
+			    keyInValue = pf->getAssignedValue(actualTerm, 0)/cGaussForNorm;
 
-			    double ubar = pf->getAssignedValue(actualTerm);
-			    double usig = pf->getAssignedError(actualTerm);
+			    double ubar = pf->getAssignedValue(actualTerm, 0);
+			    double usig = pf->getAssignedError(actualTerm, 0);
 			    double vbar = cGaussForNorm;
 			    double vsig = errCGausForNorm;
 
@@ -450,6 +457,57 @@ void Handling::doProcedure2() {
 
 
 void Handling::doProcedure3() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+
+    TGraph* g = new TGraph();
+    TFile* file = new TFile("ready/0418to0504aHistP02h_filter.root");
+
+    TDirectory* dirFilter = file->GetDirectory("withFilter");
+    TList* listDate = dirFilter->GetListOfKeys();
+    listDate->Sort();
+
+    Calendar* startDateTime = nullptr;
+
+    TIter iterDate(listDate);
+    TObject* objDate = nullptr;
+    while((objDate = iterDate())) {
+	TDirectory* dirDate = dirFilter->GetDirectory(objDate->GetName());
+	TList* listTime = dirDate->GetListOfKeys();
+
+	TIter iterTime(listTime);
+	TObject* objTime = nullptr;
+	while((objTime = iterTime())) {
+	    if(startDateTime == nullptr)
+		startDateTime = new Calendar((string)(objDate->GetName()) + (string)(objTime->GetName()));
+
+	    Calendar* thisDateTime = new Calendar((string)(objDate->GetName()) + (string)(objTime->GetName()));
+
+	    double countHour = ((double)thisDateTime->getYDay()*24. + (double)thisDateTime->getHour()) - ((double) startDateTime->getYDay()*24 + (double) startDateTime->getHour());
+
+	    double alignCenter = 1.;
+	    countHour += alignCenter;
+	    double countDay = countHour/24.;
+
+	    TH1D* thisH = (TH1D*)dirDate->Get(objTime->GetName());
+	    g->SetPoint(g->GetN(), countDay, thisH->GetEntries());
+
+	    delete thisDateTime;
+	}
+    }
+
+    delete startDateTime;
+
+    file->Close();
+    delete file;
+
+    cGraph->cd();
+    setGraphAtt(g, "fluct", "Rn222");
+    g->Draw("AP");
+    cGraph->Update();
+    cGraph->Print("plotting/fittingHualien/Statistics.png");
+
+    delete g;
+    delete cGraph;
 }
 
 
@@ -464,13 +522,14 @@ void Handling::checkHist() {
     sprintf(histTitle, "%s%s_forCheck", dirDate->GetName(), h->GetName());
     h->SetTitle(histTitle);
 
-    string fitPeak = "expo";
+    string fitPeak = "Rn222";
     PeakFitter* pf = new PeakFitter(h, fitPeak);
-    pf->setFitterStr("expo");
+    //pf->setFitterStr("expo");
     pf->setHistoName(histTitle);
     pf->setFolderPath("plotting/fittingHualien");
-    pf->setNeedZoom(false);
-    pf->fitBkg();
+    pf->setNeedZoom(true);
+    //pf->setNeedExtend(true);
+    pf->fitPeak();
 
     f->Close();
     delete f;
@@ -546,6 +605,9 @@ void Handling::setGraphAtt(TGraph* inputG, string term, string peakType = "") {
     } else if(term == "cGauss_Norm") {
 	histTitle = "Normalized Coefficient of Gaussian Term";
 	yAxisTitle = "Normalized Coefficient";
+    } else if(term == "fluct") {
+	histTitle = "Total Counts in an Energy Interval";
+	yAxisTitle = "Counts";
     } else {
 	cout << "Unknown term to described. Skip this plotting." << endl;
 	return;
@@ -627,13 +689,30 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string
 	    } else if(timeUnit == "P6H") {
 		upper = 300.;
 		lower = 200.;
+	    } else if(timeUnit == "P2H") {
+		upper = 150.;
+		lower = 50.;
 	    } else if(timeUnit == "P1H") {
 		upper = 100.;
 		lower = 0.;
 	    }
 	} else if(peakType == "Rn222") {
-	    upper = 900.;
-	    lower = 0.;
+	    if(timeUnit == "PD") {
+		upper = 900.;
+		lower = 750.;
+	    } else if(timeUnit == "P12H") {
+		upper = 450.;
+		lower = 350.;
+	    } else if(timeUnit == "P6H") {
+		upper = 250.;
+		lower = 150.;
+	    } else if(timeUnit == "P2H") {
+		upper = 100.;
+		lower = 0.;
+	    } else if(timeUnit == "P1H") {
+		upper = 100.;
+		lower = 0.;
+	    }
 	}
     } else if(term == "mean") {
 	if(peakType == "K40") {

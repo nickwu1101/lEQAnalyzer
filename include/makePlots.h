@@ -28,6 +28,7 @@ public:
     void makeHistoCh0();
     void makeHistoCh1();
     void doCoincidence(int, int, double);
+    void collectWithFilter();
     void test();
 
 private:

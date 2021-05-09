@@ -47,6 +47,7 @@ void makePlots::execute() {
     makeHistoCh0();
     //makeHistoCh1();
     //doCoincidence(0, 1, 0.0055);
+    collectWithFilter();
     outfile->Close();
 }
 
@@ -102,9 +103,9 @@ void makePlots::makeHistoCh0() {
 	outfile->cd(histoPath);
 	hCh0->Write();
 
-	delete dtStart;
-	delete dtEnd;
 	delete hCh0;
+	delete dtEnd;
+	delete dtStart;
     }
 }
 
@@ -215,6 +216,65 @@ void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
 	delete dtStart;
 	delete dtEnd;
 	delete hGoal;
+    }
+}
+
+
+
+void makePlots::collectWithFilter() {
+    initialize();
+    prepareOutputFile(filename + "_filter");
+
+    for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
+	bool willBeDealed = false;
+	Calendar* dtStart = new Calendar(startDateTime[iInt]);
+	Calendar* dtEnd = new Calendar(endDateTime[iInt]);
+
+	TH1D* hCh0 = new TH1D(dtStart->getTime().c_str(), "Maximum as Amplitude of Channel 0", bin[0], min[0], max[0]);
+
+	string folderName = "withFilter";
+	if(outfile->GetDirectory(folderName.c_str()) == nullptr)
+	    outfile->mkdir(folderName.c_str());
+
+	char histoPath[150];
+	sprintf(histoPath, "%s/%s", folderName.c_str(), dtStart->getDate().c_str());
+	if(outfile->GetDirectory(histoPath) == nullptr)
+	    outfile->mkdir(histoPath, histoPath);
+
+	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
+
+	for(unsigned int iData = 0; iData < dataList.size(); iData++) {
+	    if(iData + 1 >= dataList.size())
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, "null");
+	    else
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, dataList[iData + 1]);
+
+	    if(willBeDealed) {
+		cout << dataList[iData] << endl;
+		DataReader* dr = new DataReader(dataList[iData]);
+		dr->setQuantity(quantity);
+		dr->setStartDateTime(dtStart->getDateTime());
+		dr->setEndDateTime(dtEnd->getDateTime());
+		dr->setThreshold(true, 0.3);
+		dr->runFilterFilling(hCh0, 0, 0.56, 0.8);
+
+		delete dr;
+	    }
+	}
+
+	if(quantity == "Voltage")
+	    hCh0->SetXTitle("Voltage (V)");
+	else if(quantity == "Energy")
+	    hCh0->SetXTitle("Energy (MeV)");
+
+	hCh0->SetYTitle("Entries");
+
+	outfile->cd(histoPath);
+	hCh0->Write();
+
+	delete hCh0;
+	delete dtEnd;
+	delete dtStart;	
     }
 }
 
@@ -332,7 +392,7 @@ void makePlots::prepareDataList() {
 void makePlots::prepareOutputFile(string outfileName) {
     //if(isFileSet) return;
 
-    char outputFilename[200];
+    char outputFilename[300];
     sprintf(outputFilename, "analyzedFile/%s.root", outfileName.c_str());
     if(outfile == nullptr)
 	outfile = new TFile(outputFilename, "RECREATE");

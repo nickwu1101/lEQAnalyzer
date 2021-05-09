@@ -12,6 +12,7 @@ void main_overlap();
 void main_tempHumiPlots();
 void main_longAnalysis();
 void main_checkFitting();
+void main_fluctuation();
 void main_help();
 
 int anaType = 0;
@@ -56,6 +57,10 @@ int main(int argc, char** argv) {
 	    anaType = 5;
 	    break;
 	}
+	else if(arg == "-fluct" || arg == "--fluctuation") {
+	    anaType = 6;
+	    break;
+	}
 	else {
 	    std::cout << "Unknown option ... print usage" << std::endl;
 	    anaType = -1;
@@ -86,6 +91,8 @@ int main(int argc, char** argv) {
     case 5:
 	main_checkFitting();
 	break;
+    case 6:
+	main_fluctuation();
     }
 
     return 0;
@@ -124,6 +131,11 @@ void main_checkFitting() {
     Handling *hd = new Handling();
     hd->checkHist();
     hd->overlapForComparison();
+}
+
+void main_fluctuation() {
+    Handling *hd = new Handling();
+    hd->doProcedure3();
 }
 
 void main_help() {

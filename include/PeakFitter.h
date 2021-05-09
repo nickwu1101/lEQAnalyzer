@@ -21,9 +21,11 @@ public:
     void   test();
 
     void   setHistogram(TH1D* inputH)     { histogram = inputH; };
+    void   setPeakNumb(int);
     void   setPeakType(string);
     void   setFitterStr(string inputStr)  { fitterStr = inputStr; };
     void   setNeedZoom(bool inputBool)    { needZoom = inputBool; };
+    void   setNeedExtend(bool inputBool)  { needExtend = inputBool; };
 
     void   setOutputGraphFilename();
     void   setFolderPath(string);
@@ -36,23 +38,23 @@ public:
     void   setCExp(double, double, double);
     void   setExpo(double start, double low, double up) {
 	startExpo = start; upperExpo = up; lowerExpo = low; };
-    void   setCGauss(double start, double low, double up) {
-	startCGauss = start; upperCGauss = up; lowerCGauss = low; };
-    void   setMean(double start, double low, double up) {
-	startMean = start; upperMean = up; lowerMean = low; };
-    void   setSTD(double start, double low, double up) {
-	startSTD = start; upperSTD = up; lowerSTD = low; };
+    void   setCGauss(double start, double low, double up, int i = 0) {
+	startCGauss[i] = start; upperCGauss[i] = up; lowerCGauss[i] = low; };
+    void   setMean(double start, double low, double up, int i = 0) {
+	startMean[i] = start; upperMean[i] = up; lowerMean[i] = low; };
+    void   setSTD(double start, double low, double up, int i = 0) {
+	startSTD[i] = start; upperSTD[i] = up; lowerSTD[i] = low; };
 
     double getChi2();
     double getCPow();
     double getCExp();
     double getExpo();
-    double getCGauss();
-    double getMean();
-    double getSTD();
-    double getRatioSM();
-    double getErrorCGaus();
-    double getErrorM();
+    double getCGauss(int i = 0);
+    double getMean(int i = 0);
+    double getSTD(int i = 0);
+    double getRatioSM(int i = 0);
+    double getErrorCGaus(int i = 0);
+    double getErrorM(int i = 0);
 
     void   getSetRange(double& low, double& up) {
 	low = lowerRange; up = upperRange; };
@@ -61,26 +63,28 @@ public:
     void   getSetCExp(double&, double&, double&);
     void   getSetExpo(double& start, double& low, double& up) {
 	start = startExpo; low = lowerExpo; up = upperExpo; };
-    void   getSetCGauss(double& start, double& low, double& up) {
-	start = startCGauss;  low = lowerCGauss; up = upperCGauss; };
-    void   getSetMean(double& start, double& low, double& up) {
-	start = startMean; low = lowerMean; up = upperMean; };
-    void   getSetSTD(double& start, double& low, double& up) {
-	start = startSTD; low = lowerSTD; up = upperSTD; };
+    void   getSetCGauss(double& start, double& low, double& up, int i = 0) {
+	start = startCGauss[i];  low = lowerCGauss[i]; up = upperCGauss[i]; };
+    void   getSetMean(double& start, double& low, double& up, int i = 0) {
+	start = startMean[i]; low = lowerMean[i]; up = upperMean[i]; };
+    void   getSetSTD(double& start, double& low, double& up, int i = 0) {
+	start = startSTD[i]; low = lowerSTD[i]; up = upperSTD[i]; };
 
     void   fitPeak();
     void   fitBkg();
-    double getAssignedValue(string);
-    double getAssignedError(string);
+    double getAssignedValue(string, int i = 0);
+    double getAssignedError(string, int i = 0);
 
 private:
     vector<string> fileList;
     TH1D*  histogram;
 
     string fittingType = "Minuit";
+    int    peakNumb;
     string peakType;
     string fitterStr;
     bool   needZoom;
+    bool   needExtend;
 
     string outputGraphFilename;
     string folderPath;
@@ -99,19 +103,19 @@ private:
     double upperExpo;
     double lowerExpo;
 
-    double startCGauss;
-    double upperCGauss;
-    double lowerCGauss;
+    vector<double> startCGauss;
+    vector<double> upperCGauss;
+    vector<double> lowerCGauss;
 
-    double startMean;
-    double upperMean;
-    double lowerMean;
+    vector<double> startMean;
+    vector<double> upperMean;
+    vector<double> lowerMean;
 
-    double startSTD;
-    double upperSTD;
-    double lowerSTD;
+    vector<double> startSTD;
+    vector<double> upperSTD;
+    vector<double> lowerSTD;
 
-    double ratioSM;
+    vector<double> ratioSM;
 };
 
 #endif

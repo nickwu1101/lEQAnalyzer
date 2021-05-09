@@ -10,12 +10,12 @@ PeakFitter::PeakFitter(TH1D* inputH, string peakType) {
     histogram = inputH;
 
     setPeakType(peakType);
-    fitterStr = "expo(0) + gausn(2)";
 
     outputGraphFilename = "";
     setFolderPath("plotting/fittingHualien");
     setHistoName("");
     needZoom = false;
+    needExtend = false;
     fitptr = nullptr;
 }
 
@@ -45,15 +45,19 @@ void PeakFitter::fitPeak() {
     peak->SetRange(lowerRange, upperRange);
     peak->SetParameter(0, startCPow);
     peak->SetParameter(1, startExpo);
-    peak->SetParameter(2, startCGauss);
-    peak->SetParameter(3, startMean);
-    peak->SetParameter(4, startSTD);
 
     peak->SetParLimits(0, lowerCPow, upperCPow);
     peak->SetParLimits(1, lowerExpo, upperExpo);
-    peak->SetParLimits(2, lowerCGauss, upperCGauss);
-    peak->SetParLimits(3, lowerMean, upperMean);
-    peak->SetParLimits(4, lowerSTD, upperSTD);
+
+    for(int iPeak = 0; iPeak < peakNumb; iPeak++) {
+	peak->SetParameter(3*iPeak + 2, startCGauss[iPeak]);
+	peak->SetParameter(3*iPeak + 3, startMean[iPeak]);
+	peak->SetParameter(3*iPeak + 4, startSTD[iPeak]);
+
+	peak->SetParLimits(3*iPeak + 2, lowerCGauss[iPeak], upperCGauss[iPeak]);
+	peak->SetParLimits(3*iPeak + 3, lowerMean[iPeak], upperMean[iPeak]);
+	peak->SetParLimits(3*iPeak + 4, lowerSTD[iPeak], upperSTD[iPeak]);
+    }
 
     if(needZoom)
 	histogram->GetXaxis()->SetRangeUser(0.9*lowerRange, 1.1*upperRange);
@@ -61,7 +65,25 @@ void PeakFitter::fitPeak() {
     fitptr = histogram->Fit(peak, "S", "", lowerRange, upperRange);
 
     histogram->SetStats(kFALSE);
-    ratioSM = fitptr->Parameter(4)/fitptr->Parameter(3);
+
+    for(int iPeak = 0; iPeak < peakNumb; iPeak++) {
+	ratioSM[iPeak] = fitptr->Parameter(3*iPeak + 4)/fitptr->Parameter(3*iPeak + 3);
+    }
+
+    TF1* fExtend = nullptr;
+    if(needExtend) {
+	fExtend = new TF1("fExtend", fitterStr.c_str(), 0., 5.);
+	fExtend->SetParameter(0, fitptr->Parameter(0));
+	fExtend->SetParameter(1, fitptr->Parameter(1));
+
+	for(int iPeak = 0; iPeak < peakNumb; iPeak++) {
+	    fExtend->SetParameter(3*iPeak + 2, fitptr->Parameter(3*iPeak + 2));
+	    fExtend->SetParameter(3*iPeak + 3, fitptr->Parameter(3*iPeak + 3));
+	    fExtend->SetParameter(3*iPeak + 4, fitptr->Parameter(3*iPeak + 4));
+	}
+
+	fExtend->Draw("SAME");
+    }
 
     c->Update();
     double xleft = 0.75;
@@ -82,21 +104,27 @@ void PeakFitter::fitPeak() {
     pt->AddText(line);
     sprintf(line, "Expo: %f", fitptr->Parameter(1));
     pt->AddText(line);
-    sprintf(line, "cGauss: %f", fitptr->Parameter(2));
-    pt->AddText(line);
-    sprintf(line, "Mean: %f", fitptr->Parameter(3));
-    pt->AddText(line);
-    sprintf(line, "Std: %f", fitptr->Parameter(4));
-    pt->AddText(line);
-    sprintf(line, "RatioSM: %f", ratioSM);
-    pt->AddText(line);
-    sprintf(line, "Error of Mean: %f", fitptr->Error(3));
-    pt->AddText(line);
+    for(int i = 0; i < peakNumb; i++) {
+	sprintf(line, "cGauss%d: %f", i + 1, fitptr->Parameter(3*i + 2));
+	pt->AddText(line);
+	sprintf(line, "Mean%d: %f", i + 1, fitptr->Parameter(3*i + 3));
+	pt->AddText(line);
+	sprintf(line, "Std%d: %f", i + 1, fitptr->Parameter(3*i + 4));
+	pt->AddText(line);
+	sprintf(line, "RatioSM%d: %f", i + 1, ratioSM[i]);
+	pt->AddText(line);
+	sprintf(line, "Error of Mean%d: %f", i + 1, fitptr->Error(3*i + 3));
+	pt->AddText(line);
+    }
+
     pt->Draw();
 
     c->Update();
     c->Print(outputGraphFilename.c_str());
     c->Close();
+
+    if(fExtend != nullptr)
+	delete fExtend;
 
     delete pt;
     delete peak;
@@ -159,11 +187,42 @@ void PeakFitter::fitBkg() {
 
 
 
+void PeakFitter::setPeakNumb(int input) {
+    if(peakType == "expo") {
+	peakNumb = 0;
+	fitterStr = "expo";
+	return;
+    }
+
+    peakNumb = input;
+    if(peakNumb == 1)
+	fitterStr = "expo(0) + gausn(2)";
+    else if(peakNumb == 2)
+	fitterStr = "expo(0) + gausn(2) + gausn(5)";
+
+    startCGauss.resize(input);
+    upperCGauss.resize(input);
+    lowerCGauss.resize(input);
+
+    startMean.resize(input);
+    upperMean.resize(input);
+    lowerMean.resize(input);
+
+    startSTD.resize(input);
+    upperSTD.resize(input);
+    lowerSTD.resize(input);
+
+    ratioSM.resize(input);
+}
+
+
+
 void PeakFitter::setPeakType(string inputStr) {
     peakType = inputStr;
 
     if(peakType == "K40") {
-	setFolderPath("plotting/fittingHualien/K40");
+	folderPath = "plotting/fittingHualien/K40";
+	setPeakNumb(1);
 
 	setRange(1.4, 1.8);
 	setCPow(10., 5., 50.);
@@ -172,16 +231,24 @@ void PeakFitter::setPeakType(string inputStr) {
 	setMean(1.55, 1.5, 1.65);
 	setSTD(0.01, 0., 0.1);
     } else if(peakType == "Rn222") {
-	setFolderPath("plotting/fittingHualien/Rn222");
+	folderPath = "plotting/fittingHualien/Rn222";
+	setPeakNumb(1);
 
-	setRange(0.6, 0.84);
+	setRange(0.55, 0.84);
 	setCPow(10., -100., 100.);
 	setExpo(-3., -5., 0.);
-	setCGauss(1000., 0., 100000000.);
-	setMean(0.725, 0.7, 0.75);
-	setSTD(0.01, 0., 0.1);
+	setCGauss(1000., 0., 100000000., 0);
+	setMean(0.725, 0.7, 0.75, 0);
+	setSTD(0.01, 0., 0.1, 0);
+
+	if(peakNumb >= 2) {
+	    setCGauss(1000., 0., 100000000., 1);
+	    setMean(0.58, 0.55, 0.6, 1);
+	    setSTD(0.01, 0., 0.1, 1);
+	}
     } else if(peakType == "expo") {
-	setFolderPath("plotting/fittingHualien");
+	folderPath = "plotting/fittingHualien";
+	setPeakNumb(0);
 
 	setRange(0.4, 0.9);
 	setCPow(10., -100., 100.);
@@ -224,12 +291,30 @@ double PeakFitter::getChi2()       { return fitptr->Chi2(); }
 double PeakFitter::getCPow()       { return fitptr->Parameter(0); }
 double PeakFitter::getCExp()       { return TMath::Exp(fitptr->Parameter(0)); }
 double PeakFitter::getExpo()       { return fitptr->Parameter(1); }
-double PeakFitter::getCGauss()     { return fitptr->Parameter(2); }
-double PeakFitter::getMean()       { return fitptr->Parameter(3); }
-double PeakFitter::getSTD()        { return fitptr->Parameter(4); }
-double PeakFitter::getRatioSM()    { return ratioSM; }
-double PeakFitter::getErrorCGaus() { return fitptr->ParError(2); }
-double PeakFitter::getErrorM()     { return fitptr->ParError(3); }
+
+double PeakFitter::getCGauss(int i) {
+    return fitptr->Parameter(3*i + 2);
+}
+
+double PeakFitter::getMean(int i) {
+    return fitptr->Parameter(3*i + 3);
+}
+
+double PeakFitter::getSTD(int i) {
+    return fitptr->Parameter(3*i + 4);
+}
+
+double PeakFitter::getRatioSM(int i) {
+    return ratioSM[i];
+}
+
+double PeakFitter::getErrorCGaus(int i) {
+    return fitptr->ParError(3*i + 2);
+}
+
+double PeakFitter::getErrorM(int i) {
+    return fitptr->ParError(3*i + 3);
+}
 
 
 
@@ -241,7 +326,7 @@ void PeakFitter::getSetCExp(double& start, double& low, double& up) {
 
 
 
-double PeakFitter::getAssignedValue(string inputStr) {
+double PeakFitter::getAssignedValue(string inputStr, int i) {
     if(inputStr == "chi2")
 	return fitptr->Chi2();
     else if(inputStr == "cPow")
@@ -251,13 +336,13 @@ double PeakFitter::getAssignedValue(string inputStr) {
     else if(inputStr == "expo")
 	return fitptr->Parameter(1);
     else if(inputStr == "cGauss")
-	return fitptr->Parameter(2);
+	return fitptr->Parameter(3*i + 2);
     else if(inputStr == "mean")
-	return fitptr->Parameter(3);
+	return fitptr->Parameter(3*i + 3);
     else if(inputStr == "std")
-	return fitptr->Parameter(4);
+	return fitptr->Parameter(3*i + 4);
     else if(inputStr == "ratioSM")
-	return ratioSM;
+	return ratioSM[i];
     else {
 	cout << "Unknown Term!!!" << endl;
 	return 0;
@@ -266,17 +351,17 @@ double PeakFitter::getAssignedValue(string inputStr) {
 
 
 
-double PeakFitter::getAssignedError(string inputStr) {
+double PeakFitter::getAssignedError(string inputStr, int i) {
     if(inputStr == "cPow")
 	return fitptr->ParError(0);
     else if(inputStr == "expo")
 	return fitptr->ParError(1);
     else if(inputStr == "cGauss")
-	return fitptr->ParError(2);
+	return fitptr->ParError(3*i + 2);
     else if(inputStr == "mean")
-	return fitptr->ParError(3);
+	return fitptr->ParError(3*i + 3);
     else if(inputStr == "std")
-	return fitptr->ParError(4);
+	return fitptr->ParError(3*i + 4);
     else if(inputStr == "cExp") {
 	cout << "cExp cannot do an error. It will return a 0." << endl;
 	return 0;

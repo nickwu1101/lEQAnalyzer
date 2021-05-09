@@ -19,8 +19,8 @@ public:
     void   test();
 
     void   doProcedure1(); // Overlap
-    void   doProcedure2();
-    void   doProcedure3();
+    void   doProcedure2(); // fitting
+    void   doProcedure3(); // count entries
 
     void   checkHist();
     void   overlapForComparison();

@@ -36,6 +36,7 @@ public:
     void     initialize();
     void     runFillingLoop(TH1D*, int);
     void     runCoincidenceFilling(TH1D*, int, double);
+    void     runFilterFilling(TH1D*, int, double, double);
 
     void     setEndDateTime(string);
     void     setProjectName(string inputStr) { projectName = inputStr; };
