@@ -28,7 +28,7 @@ public:
     void makeHistoCh0();
     void makeHistoCh1();
     void doCoincidence(int, int, double);
-    void collectWithFilter();
+    void collectWithFilter(string, double, double);
     void test();
 
 private:
@@ -39,15 +39,15 @@ private:
     vector<Int_t> bin;
     vector<Double_t> min;
     vector<Double_t> max;
-    double unitConverter = 1.;
-    double conversingFactorCh0 = 1.;
-    string quantity = "Voltage";
+    double unitConverter;
+    double conversingFactorCh0;
+    string quantity;
 
-    TFile* outfile = nullptr;
-    string filename = "";
+    TFile* outfile;
+    string filename;
     int    anaType;
-    bool   isFileSet = false;
-    bool   isInit = false;
+    bool   isFileSet;
+    bool   isInit;
 
     void initialize();
     void readAnalysisParameter();

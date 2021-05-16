@@ -12,7 +12,7 @@ DataReader::DataReader(string inputProject) {
     string inputFilename = "data/" + projectName + ".root";
     fFile = new TFile(inputFilename.c_str(), "READ");
     fFile->GetObject("detector_A", fTree);
-    
+
     fileDateTime = new Calendar(projectName);
     startDateTime = new Calendar(projectName);
     endDateTime = new Calendar(projectName);
@@ -66,7 +66,7 @@ void DataReader::runFillingLoop(TH1D* inputH, int channel) {
 	    ch1d = ch1;
 	else
 	    ch1d = 0.;
-	
+
 	double fillValue = 0.;
 	if(channel == 0)
 	    fillValue = ch0d;
@@ -74,7 +74,7 @@ void DataReader::runFillingLoop(TH1D* inputH, int channel) {
 	    fillValue = ch1d;
 	
 	timestampD = timestamp;
-	
+
 	Calendar* eventDateTime = new Calendar(projectName);
 	eventDateTime->addDuration(0, 0, 0, 0, timestampD);
 
@@ -88,7 +88,7 @@ void DataReader::runFillingLoop(TH1D* inputH, int channel) {
 	    }
 	} else if(*eventDateTime > *endDateTime) {
 	    delete eventDateTime;
-	    break;
+	    continue;
 	}
 
 	delete eventDateTime;
@@ -141,7 +141,7 @@ void DataReader::runCoincidenceFilling(TH1D* inputH, int channel, double thresho
 	    }
 	} else if(*eventDateTime > *endDateTime) {
 	    delete eventDateTime;
-	    break;
+	    continue;
 	}
 
 	delete eventDateTime;
@@ -193,7 +193,7 @@ void DataReader::runFilterFilling(TH1D* inputH, int channel,
 		}
 	    } else if(*eventDateTime > *endDateTime) {
 		delete eventDateTime;
-		break;
+		continue;
 	    }
 
 	    delete eventDateTime;

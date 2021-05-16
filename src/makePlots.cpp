@@ -15,7 +15,16 @@
 #include "GetExterSet.h"
 #include "makePlots.h"
 
-makePlots::makePlots() {}
+makePlots::makePlots() {
+    unitConverter = 1.;
+    conversingFactorCh0 = 1.;
+    quantity = "Voltage";
+
+    outfile = nullptr;
+    filename = "";
+    isFileSet = false;
+    isInit = false;
+}
 
 
 
@@ -47,7 +56,10 @@ void makePlots::execute() {
     makeHistoCh0();
     //makeHistoCh1();
     //doCoincidence(0, 1, 0.0055);
-    collectWithFilter();
+    collectWithFilter("Rn222", 0.56, 0.8);
+    collectWithFilter("K40", 1.5, 1.64);
+    collectWithFilter("peak04", 0.385, 0.41);
+    collectWithFilter("peak24", 2.35, 2.45);
     outfile->Close();
 }
 
@@ -221,9 +233,9 @@ void makePlots::doCoincidence(int goalCh, int threCh, double threshold) {
 
 
 
-void makePlots::collectWithFilter() {
+void makePlots::collectWithFilter(string filtingRegion,
+				  double low, double up) {
     initialize();
-    prepareOutputFile(filename + "_filter");
 
     for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
 	bool willBeDealed = false;
@@ -232,7 +244,7 @@ void makePlots::collectWithFilter() {
 
 	TH1D* hCh0 = new TH1D(dtStart->getTime().c_str(), "Maximum as Amplitude of Channel 0", bin[0], min[0], max[0]);
 
-	string folderName = "withFilter";
+	string folderName = "withFilt_" + filtingRegion;
 	if(outfile->GetDirectory(folderName.c_str()) == nullptr)
 	    outfile->mkdir(folderName.c_str());
 
@@ -250,13 +262,14 @@ void makePlots::collectWithFilter() {
 		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, dataList[iData + 1]);
 
 	    if(willBeDealed) {
-		cout << dataList[iData] << endl;
+		cout << dataList[iData] << endl
+		     << filtingRegion << endl;
 		DataReader* dr = new DataReader(dataList[iData]);
 		dr->setQuantity(quantity);
 		dr->setStartDateTime(dtStart->getDateTime());
 		dr->setEndDateTime(dtEnd->getDateTime());
 		dr->setThreshold(true, 0.3);
-		dr->runFilterFilling(hCh0, 0, 0.56, 0.8);
+		dr->runFilterFilling(hCh0, 0, low, up);
 
 		delete dr;
 	    }
@@ -397,8 +410,9 @@ void makePlots::prepareOutputFile(string outfileName) {
     if(outfile == nullptr)
 	outfile = new TFile(outputFilename, "RECREATE");
     else {
-	delete outfile;
-	outfile = new TFile(outputFilename, "RECREATE");
+	//outfile->Close();
+	//outfile = outfile->Open(outputFilename, "UPDATE");
+	return;
     }
 }
 

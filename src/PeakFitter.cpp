@@ -234,7 +234,7 @@ void PeakFitter::setPeakType(string inputStr) {
 	folderPath = "plotting/fittingHualien/Rn222";
 	setPeakNumb(1);
 
-	setRange(0.55, 0.84);
+	setRange(0.6, 0.84);
 	setCPow(10., -100., 100.);
 	setExpo(-3., -5., 0.);
 	setCGauss(1000., 0., 100000000., 0);
@@ -246,6 +246,26 @@ void PeakFitter::setPeakType(string inputStr) {
 	    setMean(0.58, 0.55, 0.6, 1);
 	    setSTD(0.01, 0., 0.1, 1);
 	}
+    } else if(peakType == "peak04") {
+	folderPath = "plotting/fittingHualien/peak04";
+	setPeakNumb(1);
+
+	setRange(0.35, 0.45);
+	setCPow(10., -100., 100.);
+	setExpo(-3., -5., 0.);
+	setCGauss(1000., 0., 100000000., 0);
+	setMean(0.4, 0.38, 0.41, 0);
+	setSTD(0.01, 0., 0.1, 0);
+    } else if(peakType == "peak24") {
+	folderPath = "plotting/fittingHualien/peak24";
+	setPeakNumb(1);
+
+	setRange(2.3, 2.55);
+	setCPow(10., -100., 100.);
+	setExpo(-3., -5., 0.);
+	setCGauss(1000., 0., 100000000., 0);
+	setMean(2.4, 2.35, 2.45, 0);
+	setSTD(0.01, 0., 0.1, 0);
     } else if(peakType == "expo") {
 	folderPath = "plotting/fittingHualien";
 	setPeakNumb(0);

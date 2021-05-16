@@ -153,6 +153,8 @@ void Handling::doProcedure2() {
 
     peakList.push_back("K40");
     peakList.push_back("Rn222");
+    peakList.push_back("peak04");
+    peakList.push_back("peak24");
 
     timeUnitList.push_back("PT");
     //timeUnitList.push_back("PD");
@@ -172,7 +174,7 @@ void Handling::doProcedure2() {
 		string setName = "f" + termList[iTerm] + peakList[iPeak] + timeUnitList[iTU];
 
 		if(timeUnitList[iTU] == "PT")
-		    f[mapLabel] = new TF1(setName.c_str(), "[0]", 0., 16.);
+		    f[mapLabel] = new TF1(setName.c_str(), "[0]", 0., 24.);
 		else if(timeUnitList[iTU] == "PD"
 			|| timeUnitList[iTU] == "P12H"
 			|| timeUnitList[iTU] == "P6H"
@@ -191,17 +193,17 @@ void Handling::doProcedure2() {
 	TFile* file = nullptr;
 	string thisTU = timeUnitList[iTU];
 	if(thisTU == "PT")
-	    file = new TFile("ready/0418to0504oneHist.root", "READ");
+	    file = new TFile("ready/0418to0512oneHist.root", "READ");
 	else if(thisTU == "PD")
-	    file = new TFile("ready/0418to0504aHistPDay.root", "READ");
+	    file = new TFile("ready/0418to0512aHistPDay.root", "READ");
 	else if(thisTU == "P12H")
-	    file = new TFile("ready/0418to0504aHistP12h.root", "READ");
+	    file = new TFile("ready/0418to0512aHistP12h.root", "READ");
 	else if(thisTU == "P6H")
-	    file = new TFile("ready/0418to0504aHistP06h.root", "READ");
+	    file = new TFile("ready/0418to0512aHistP06h.root", "READ");
 	else if(thisTU == "P2H")
-	    file = new TFile("ready/0418to0504aHistP02h.root", "READ");
+	    file = new TFile("ready/0418to0512aHistP02h.root", "READ");
 	else if(thisTU == "P1H")
-	    file = new TFile("ready/0418to0504aHistP01h.root", "READ");
+	    file = new TFile("ready/0418to0512aHistP01h.root", "READ");
 
 	TDirectory* dirCh0 = file->GetDirectory("HistoCh0");
 	TList* listDate = dirCh0->GetListOfKeys();
@@ -229,7 +231,7 @@ void Handling::doProcedure2() {
 		string strForTitle;
 		if(thisTU == "PT") {
 		    alignCenter = 0.;
-		    strForTitle = "all_16_days";
+		    strForTitle = "all_24_days";
 		} else if(thisTU == "PD") {
 		    alignCenter = 12.;
 		    strForTitle = "per_01_day";
@@ -268,6 +270,7 @@ void Handling::doProcedure2() {
 		pf->setPeakType(peakForNorm);
 		string histoName = (string)histTitle + "_" + peakForNorm;
 		pf->setHistoName(histoName);
+		pf->setNeedZoom(false);
 		pf->fitPeak();
 
 		double cGaussForNorm = pf->getCGauss(0);
@@ -336,6 +339,8 @@ void Handling::doProcedure2() {
 		    pf->setPeakType(thisPeak);
 		    histoName = (string)histTitle + "_" + thisPeak;
 		    pf->setHistoName(histoName);
+		    pf->setNeedZoom(false);
+
 		    pf->fitPeak();
 
 		    for(unsigned int iTerm = 0; iTerm < termList.size(); iTerm++) {
@@ -459,54 +464,180 @@ void Handling::doProcedure2() {
 void Handling::doProcedure3() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
-    TGraph* g = new TGraph();
-    TFile* file = new TFile("ready/0418to0504aHistP02h_filter.root");
+    vector<string> energyRange;
+    vector<string> timeUnitList;
 
-    TDirectory* dirFilter = file->GetDirectory("withFilter");
-    TList* listDate = dirFilter->GetListOfKeys();
-    listDate->Sort();
+    energyRange.push_back("K40");
+    energyRange.push_back("Rn222");
+    energyRange.push_back("peak04");
+    energyRange.push_back("peak24");
 
-    Calendar* startDateTime = nullptr;
+    timeUnitList.push_back("PD");
+    timeUnitList.push_back("P12H");
+    timeUnitList.push_back("P6H");
+    timeUnitList.push_back("P2H");
+    timeUnitList.push_back("P1H");
 
-    TIter iterDate(listDate);
-    TObject* objDate = nullptr;
-    while((objDate = iterDate())) {
-	TDirectory* dirDate = dirFilter->GetDirectory(objDate->GetName());
-	TList* listTime = dirDate->GetListOfKeys();
+    map<string, double> norm;
+    map<string, TGraph*> g;
+    map<string, TGraph*> gn;
 
-	TIter iterTime(listTime);
-	TObject* objTime = nullptr;
-	while((objTime = iterTime())) {
-	    if(startDateTime == nullptr)
-		startDateTime = new Calendar((string)(objDate->GetName()) + (string)(objTime->GetName()));
+    map<string, double> mean;
+    map<string, double> std;
+    map<string, double> ntimebin;
 
-	    Calendar* thisDateTime = new Calendar((string)(objDate->GetName()) + (string)(objTime->GetName()));
-
-	    double countHour = ((double)thisDateTime->getYDay()*24. + (double)thisDateTime->getHour()) - ((double) startDateTime->getYDay()*24 + (double) startDateTime->getHour());
-
-	    double alignCenter = 1.;
-	    countHour += alignCenter;
-	    double countDay = countHour/24.;
-
-	    TH1D* thisH = (TH1D*)dirDate->Get(objTime->GetName());
-	    g->SetPoint(g->GetN(), countDay, thisH->GetEntries());
-
-	    delete thisDateTime;
+    for(unsigned int iER = 0; iER < energyRange.size(); iER++) {
+	for(unsigned int iTU = 0; iTU < timeUnitList.size(); iTU++) {
+	    string mapLabel = energyRange[iER] + "," + timeUnitList[iTU];
+	    g[mapLabel] = new TGraph();
+	    gn[mapLabel] = new TGraph();
+	    mean[mapLabel] = 0.;
+	    std[mapLabel] = 0.;
+	    ntimebin[mapLabel] = 0.;
 	}
     }
 
-    delete startDateTime;
+    TFile* fileT = new TFile("ready/0418to0512oneHist.root");
+    for(unsigned int iER = 0; iER < energyRange.size(); iER++) {
+	string thisER = energyRange[iER];
+	string histoPath = "withFilt_" + thisER + "/20210418/000000";
+	TH1D* hT = (TH1D*)fileT->Get(histoPath.c_str());
+	norm[thisER] = hT->GetEntries();
+    }
+    fileT->Close();
+    delete fileT;
 
-    file->Close();
-    delete file;
+    for(unsigned int iTU = 0; iTU < timeUnitList.size(); iTU++) {
+	TFile* file = nullptr;
+	string thisTU = timeUnitList[iTU];
+	if(thisTU == "PD")
+	    file = new TFile("ready/0418to0512aHistPD.root", "READ");
+	else if(thisTU == "P12H")
+	    file = new TFile("ready/0418to0512aHistP12h.root", "READ");
+	else if(thisTU == "P6H")
+	    file = new TFile("ready/0418to0512aHistP06h.root", "READ");
+	else if(thisTU == "P2H")
+	    file = new TFile("ready/0418to0512aHistP02h.root", "READ");
+	else if(thisTU == "P1H")
+	    file = new TFile("ready/0418to0512aHistP01h.root", "READ");
+
+	for(unsigned int iER = 0; iER < energyRange.size(); iER++) {
+	    string thisER = energyRange[iER];
+	    string dirERname = "withFilt_" + thisER;
+
+	    TDirectory* dirER = file->GetDirectory(dirERname.c_str());
+	    TList* listDate = dirER->GetListOfKeys();
+	    listDate->Sort();
+
+	    Calendar* startDateTime = nullptr;
+
+	    TIter iterDate(listDate);
+	    TObject* objDate = nullptr;
+	    while((objDate = iterDate())) {
+		TDirectory* dirDate = dirER->GetDirectory(objDate->GetName());
+		TList* listTime = dirDate->GetListOfKeys();
+
+		TIter iterTime(listTime);
+		TObject* objTime = nullptr;
+		while((objTime = iterTime())) {
+		    if(startDateTime == nullptr)
+			startDateTime = new Calendar((string)(objDate->GetName()) + (string)(objTime->GetName()));
+
+		    Calendar* thisDateTime = new Calendar((string)(objDate->GetName()) + (string)(objTime->GetName()));
+
+		    double countHour = ((double)thisDateTime->getYDay()*24. + (double)thisDateTime->getHour()) - ((double)startDateTime->getYDay()*24 + (double)startDateTime->getHour());
+
+		    double alignCenter = 0.;
+		    if(thisTU == "PD") {
+			alignCenter = 12.;
+		    } else if(thisTU == "P12H") {
+			alignCenter = 6.;
+		    } else if(thisTU == "P6H") {
+			alignCenter = 3.;
+		    } else if(thisTU == "P2H") {
+			alignCenter = 1.;
+		    } else if(thisTU == "P1H") {
+			alignCenter = 0.5;
+		    } else {
+			cout << "Time unit term is set inappropriately!!!" << endl;
+			return;
+		    }
+		    countHour += alignCenter;
+		    double countDay = countHour/24.;
+
+		    TH1D* thisH = (TH1D*)dirDate->Get(objTime->GetName());
+		    string mapLabel = thisER + "," + thisTU;
+		    g[mapLabel]->SetPoint(g[mapLabel]->GetN(), countDay, thisH->GetEntries());
+		    gn[mapLabel]->SetPoint(gn[mapLabel]->GetN(), countDay, thisH->GetEntries()/(2*alignCenter*norm[thisER]/576.));
+
+		    mean[mapLabel] += thisH->GetEntries();
+		    std[mapLabel] += thisH->GetEntries()*thisH->GetEntries();
+		    ntimebin[mapLabel]++;
+
+		    delete thisDateTime;
+		}
+	    }
+
+	    if(startDateTime != nullptr)
+		delete startDateTime;
+	}
+
+	file->Close();
+	delete file;
+    }
 
     cGraph->cd();
-    setGraphAtt(g, "fluct", "Rn222");
-    g->Draw("AP");
-    cGraph->Update();
-    cGraph->Print("plotting/fittingHualien/Statistics.png");
+    for(unsigned int iER = 0; iER < energyRange.size(); iER++) {
+	for(unsigned int iTU = 0; iTU < timeUnitList.size(); iTU++) {
+	    string thisER = energyRange[iER];
+	    string thisTU = timeUnitList[iTU];
+	    string mapLabel = thisER + "," + thisTU;
 
-    delete g;
+	    mean[mapLabel] /= ntimebin[mapLabel];
+	    std[mapLabel] -= ntimebin[mapLabel]*mean[mapLabel]*mean[mapLabel];
+	    std[mapLabel] /= ntimebin[mapLabel] - 1;
+	    std[mapLabel] = TMath::Sqrt(std[mapLabel]);
+	    string funcTitle = "fup_" + mapLabel;
+	    TF1* fup = new TF1(funcTitle.c_str(), "[0]", 0., 24.);
+	    funcTitle = "fmid_" + mapLabel;
+	    TF1* fmid = new TF1(funcTitle.c_str(), "[0]", 0., 24.);
+	    funcTitle = "fdw_" + mapLabel;
+	    TF1* fdw = new TF1(funcTitle.c_str(), "[0]", 0., 24.);
+	    fup->SetParameter(0, mean[mapLabel] + std[mapLabel]);
+	    fmid->SetParameter(0, mean[mapLabel]);
+	    fdw->SetParameter(0, mean[mapLabel] - std[mapLabel]);
+	    fup->SetLineColor(kGreen);
+	    fmid->SetLineColor(kBlack);
+	    fdw->SetLineColor(kGreen);
+
+	    setGraphAtt(g[mapLabel], "fluct", thisER);
+	    //setRangeUser(g[mapLabel], "fluct", thisER, thisTU);
+	    g[mapLabel]->Draw("AP");
+	    fup->Draw("SAME");
+	    fmid->Draw("SAME");
+	    fdw->Draw("SAME");
+	    cGraph->Update();
+	    string outputGraphFolder = "plotting/fittingHualien/counting";
+	    string outputGraphName = "counts_" + thisER + "_" + thisTU + ".png";
+	    string outputGraphPath = outputGraphFolder + "/" + outputGraphName;
+	    cGraph->Print(outputGraphPath.c_str());
+
+	    setGraphAtt(gn[mapLabel], "nfluct", thisER);
+	    setRangeUser(gn[mapLabel], "nfluct", thisER, thisTU);
+	    gn[mapLabel]->Draw("AP");
+	    cGraph->Update();
+	    outputGraphName = "NormCounts_" + thisER + "_" + thisTU + ".png";
+	    outputGraphPath = outputGraphFolder + "/" + outputGraphName;
+	    cGraph->Print(outputGraphPath.c_str());
+	}
+    }
+
+    for(map<string, TGraph*>::iterator it = g.begin(); it != g.end(); ++it)
+	delete it->second;
+
+    for(map<string, TGraph*>::iterator it = gn.begin(); it != gn.end(); ++it)
+	delete it->second;
+
     delete cGraph;
 }
 
@@ -606,8 +737,11 @@ void Handling::setGraphAtt(TGraph* inputG, string term, string peakType = "") {
 	histTitle = "Normalized Coefficient of Gaussian Term";
 	yAxisTitle = "Normalized Coefficient";
     } else if(term == "fluct") {
-	histTitle = "Total Counts in an Energy Interval";
+	histTitle = "Total Counts in an Energy Range";
 	yAxisTitle = "Counts";
+    } else if(term == "nfluct") {
+	histTitle = "Normalized Counts in an Energy Range";
+	yAxisTitle = "Normalized Counts";
     } else {
 	cout << "Unknown term to described. Skip this plotting." << endl;
 	return;
@@ -661,6 +795,12 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string
 	} else if(peakType == "Rn222") {
 	    upper = 20.;
 	    lower = 0.;
+	} else if(peakType == "peak04") {
+	    upper = 15.;
+	    lower = 0.;
+	} else if(peakType == "peak24") {
+	    upper = 15.;
+	    lower = 13.;
 	}
     } else if(term == "cExp") {
 	if(peakType == "K40") {
@@ -669,6 +809,12 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string
 	} else if(peakType == "Rn222") {
 	    upper = 3500000.;
 	    lower = 0.;
+	} else if(peakType == "peak04") {
+	    upper = 25000.;
+	    lower = 0.;
+	} else if(peakType == "peak24") {
+	    upper = 2000000.;
+	    lower = 1000000.;
 	}
     } else if(term == "expo") {
 	if(peakType == "K40") {
@@ -677,6 +823,12 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string
 	} else if(peakType == "Rn222") {
 	    upper = -3.;
 	    lower = -4.;
+	} else if(peakType == "peak04") {
+	    upper = -3.;
+	    lower = -4.;
+	} else if(peakType == "peak24") {
+	    upper = -4.;
+	    lower = -6.;
 	}
     } else if(term == "cGauss") {
 	if(peakType == "K40") {
@@ -713,6 +865,24 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string
 		upper = 100.;
 		lower = 0.;
 	    }
+	} else if(peakType == "peak04") {
+	    if(timeUnit == "PD") {
+	    } else if(timeUnit == "P12H") {
+	    } else if(timeUnit == "P6H") {
+	    } else if(timeUnit == "P2H") {
+		upper = 30.;
+		lower = 0.;
+	    } else if(timeUnit == "P1H") {
+	    }
+	} else if(peakType == "peak24") {
+	    if(timeUnit == "PD") {
+	    } else if(timeUnit == "P12H") {
+	    } else if(timeUnit == "P6H") {
+	    } else if(timeUnit == "P2H") {
+		upper = 30.;
+		lower = 10.;
+	    } else if(timeUnit == "P1H") {
+	    }
 	}
     } else if(term == "mean") {
 	if(peakType == "K40") {
@@ -721,6 +891,12 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string
 	} else if(peakType == "Rn222") {
 	    upper = 0.8;
 	    lower = 0.7;
+	} else if(peakType == "peak04") {
+	    upper = 0.5;
+	    lower = 0.3;
+	} else if(peakType == "peak24") {
+	    upper = 2.5;
+	    lower = 2.3;
 	}
     } else if(term == "std") {
 	if(peakType == "K40") {
@@ -729,12 +905,24 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string
 	} else if(peakType == "Rn222") {
 	    upper = 0.035;
 	    lower = 0.025;
+	} else if(peakType == "peak04") {
+	    upper = 0.02;
+	    lower = 0.01;
+	} else if(peakType == "peak24") {
+	    upper = 0.02;
+	    lower = 0.01;
 	}
     } else if(term == "cExp_Norm") {
 	if(peakType == "K40") {
 	    upper = 400.;
 	    lower = 0.;
 	} else if(peakType == "Rn222") {
+	    upper = 400.;
+	    lower = 0.;
+	} else if(peakType == "peak04") {
+	    upper = 400.;
+	    lower = 0.;
+	} else if(peakType == "peak24") {
 	    upper = 400.;
 	    lower = 0.;
 	}
@@ -745,6 +933,152 @@ void Handling::setRangeUser(TGraph* inputG, string term, string peakType, string
 	} else if(peakType == "Rn222") {
 	    upper = 0.9;
 	    lower = 0.5;
+	} else if(peakType == "peak04") {
+	    upper = 0.3;
+	    lower = 0.1;
+	} else if(peakType == "peak24") {
+	    upper = 0.3;
+	    lower = 0.1;
+	}
+    } else if(term == "fluct") {
+	if(peakType == "K40") {
+	    if(timeUnit == "PD") {
+		upper = 280000.;
+		lower = 260000.;
+	    } else if(timeUnit == "P12H") {
+		upper = 142000.;
+		lower = 130000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 71000.;
+		lower = 60000.;
+	    } else if(timeUnit == "P2H") {
+		upper = 24000.;
+		lower = 20000.;
+	    } else if(timeUnit == "P1H") {
+		upper = 15000.;
+		lower = 8000.;
+	    }
+	} else if(peakType == "Rn222") {
+	    if(timeUnit == "PD") {
+		upper = 1140000.;
+		lower = 1100000.;
+	    } else if(timeUnit == "P12H") {
+		upper = 570000.;
+		lower = 550000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 285000.;
+		lower = 270000.;
+	    } else if(timeUnit == "P2H") {
+		upper = 100000.;
+		lower = 80000.;
+	    } else if(timeUnit == "P1H") {
+		upper = 48000.;
+		lower = 45000.;
+	    }
+	} else if(peakType == "peak04") {
+	    if(timeUnit == "PD") {
+		upper = 450000.;
+		lower = 420000.;
+	    } else if(timeUnit == "P12H") {
+		upper = 225000.;
+		lower = 210000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 114000.;
+		lower = 104000.;
+	    } else if(timeUnit == "P2H") {
+		upper = 38000.;
+		lower = 34000.;
+	    } else if(timeUnit == "P1H") {
+		upper = 20000.;
+		lower = 16000.;
+	    }
+	} else if(peakType == "peak24") {
+	    if(timeUnit == "PD") {
+		upper = 47000.;
+		lower = 44000.;
+	    } else if(timeUnit == "P12H") {
+		upper = 23500.;
+		lower = 22000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 12000.;
+		lower = 11000.;
+	    } else if(timeUnit == "P2H") {
+		upper = 4200.;
+		lower = 3400.;
+	    } else if(timeUnit == "P1H") {
+		upper = 2200.;
+		lower = 1600.;
+	    }
+	}
+    } else if(term == "nfluct") {
+	if(peakType == "K40") {
+	    if(timeUnit == "PD") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P12H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P6H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P2H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P1H") {
+		upper = 1.1;
+		lower = 0.9;
+	    }
+	} else if(peakType == "Rn222") {
+	    if(timeUnit == "PD") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P12H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P6H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P2H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P1H") {
+		upper = 1.1;
+		lower = 0.9;
+	    }
+	} else if(peakType == "peak04") {
+	    if(timeUnit == "PD") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P12H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P6H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P2H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P1H") {
+		upper = 1.1;
+		lower = 0.9;
+	    }
+	} else if(peakType == "peak24") {
+	    if(timeUnit == "PD") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P12H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P6H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P2H") {
+		upper = 1.1;
+		lower = 0.9;
+	    } else if(timeUnit == "P1H") {
+		upper = 1.1;
+		lower = 0.9;
+	    }
 	}
     }
 

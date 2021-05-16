@@ -64,7 +64,7 @@ t.Branch('timestamp',slicedarray1,"slicedarray1[%d]/F" %(singleLength))
 
 # Loop
 for index in range (Events):
-    if ( index % 1000 == 0 ):
+    if ( index % 10000 == 0 ):
         print ("Processing event", index )
     start_index = index * singleLength
     end_index = (index + 1) * singleLength

@@ -45,6 +45,13 @@ public:
     void   setSTD(double start, double low, double up, int i = 0) {
 	startSTD[i] = start; upperSTD[i] = up; lowerSTD[i] = low; };
 
+    TH1D*  getHistogram()  { return histogram; };
+    int    getPeakNumb()   { return peakNumb; };
+    string getPeakType()   { return peakType; };
+    string getFitterStr()  { return fitterStr; };
+    bool   getNeedZoom()   { return needZoom; };
+    bool   getNeedExtend() { return needExtend; };
+
     double getChi2();
     double getCPow();
     double getCExp();
