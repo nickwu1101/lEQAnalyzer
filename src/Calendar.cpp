@@ -27,8 +27,7 @@ Calendar::Calendar(int year, int month, int mDay, int hour, int minute, double s
 
     MD2YDay();
 
-    cout << cyday << endl
-	 << checkValid() << endl;
+    //cout << cyday << endl << checkValid() << endl;
 }
 
 

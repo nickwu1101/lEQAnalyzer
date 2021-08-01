@@ -5,6 +5,8 @@
 #include "StatisticTools.h"
 #include "Handling.h"
 #include "TempHumi.h"
+#include "TimeAnalysis.h"
+#include "GraphPrinter.h"
 
 void main_test();
 void main_makePlots();
@@ -13,6 +15,9 @@ void main_tempHumiPlots();
 void main_longAnalysis();
 void main_checkFitting();
 void main_fluctuation();
+void main_merge();
+void main_countTemp();
+void main_timeAna();
 void main_help();
 
 int anaType = 0;
@@ -41,6 +46,10 @@ int main(int argc, char** argv) {
 	    anaType = 1;
 	    break;
 	}
+	else if(arg == "-m" || arg == "--merge") {
+	    anaType = 7;
+	    break;
+	}
 	else if(arg == "-o" || arg == "--overlap") {
 	    anaType = 2;
 	    break;
@@ -59,6 +68,14 @@ int main(int argc, char** argv) {
 	}
 	else if(arg == "-fluct" || arg == "--fluctuation") {
 	    anaType = 6;
+	    break;
+	}
+	else if(arg == "-ct") {
+	    anaType = 8;
+	    break;
+	}
+	else if(arg == "-af") {
+	    anaType = 9;
 	    break;
 	}
 	else {
@@ -93,6 +110,16 @@ int main(int argc, char** argv) {
 	break;
     case 6:
 	main_fluctuation();
+	break;
+    case 7:
+	main_merge();
+	break;
+    case 8:
+	main_countTemp();
+	break;
+    case 9:
+	main_timeAna();
+	break;
     }
 
     return 0;
@@ -100,10 +127,13 @@ int main(int argc, char** argv) {
 
 void main_test() {
     //makePlots *testObj = new makePlots();
-    StatisticTools *testObj = new StatisticTools();
+    //StatisticTools *testObj = new StatisticTools();
     //Handling *testObj = new Handling();
     //TempHumi *testObj = new TempHumi();
+    TimeAnalysis *testObj = new TimeAnalysis();
+    GraphPrinter *testObj2 = new GraphPrinter();
     testObj->test();
+    testObj2->test();
 }
 
 void main_makePlots() {
@@ -124,7 +154,7 @@ void main_tempHumiPlots() {
 
 void main_longAnalysis() {
     Handling *hd = new Handling();
-    hd->doProcedure2();
+    hd->doProcedure6();
 }
 
 void main_checkFitting() {
@@ -136,6 +166,20 @@ void main_checkFitting() {
 void main_fluctuation() {
     Handling *hd = new Handling();
     hd->doProcedure3();
+    hd->doProcedure5();
+}
+
+void main_merge() {
+    makePlots* mp = new makePlots();
+    mp->mergeHist();
+}
+
+void main_countTemp() {
+    Handling* hd = new Handling();
+    hd->doProcedure4();
+}
+
+void main_timeAna() {
 }
 
 void main_help() {

@@ -10,6 +10,7 @@
 using namespace std;
 
 class Calendar;
+class TGraph;
 
 class TempHumi {
 public:
@@ -20,6 +21,14 @@ public:
     void test();
 
     void makeTempHumiPlotting();
+    void printCanvas();
+
+    double getAvgTemp(string dt) { return calAvgTemp(dt); };
+    double getStdTemp(string dt) { return calStdTemp(dt); };
+    double getErrTemp(string dt) { return calErrTemp(dt); };
+    double getAvgHumi(string dt) { return calAvgHumi(dt); };
+    double getStdHumi(string dt) { return calStdHumi(dt); };
+    double getErrHumi(string dt) { return calErrHumi(dt); };
 
     void setEndDateTime(string);
     void setStartDateTime(string);
@@ -36,8 +45,14 @@ private:
     string    timeLengthOfGraph;
     string    timeUnit;
 
+    void      setGraphAtt(TGraph*, string);
+
     double    calAvgTemp(string);
+    double    calStdTemp(string);
+    double    calErrTemp(string);
     double    calAvgHumi(string);
+    double    calStdHumi(string);
+    double    calErrHumi(string);
     void      doTempHumiMap();
     void      assignTimeInterval();
     void      prepareDataList();

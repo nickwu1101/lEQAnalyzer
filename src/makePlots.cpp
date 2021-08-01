@@ -22,6 +22,7 @@ makePlots::makePlots() {
 
     outfile = nullptr;
     filename = "";
+    fileStat = "UPDATE";
     isFileSet = false;
     isInit = false;
 }
@@ -52,14 +53,20 @@ void makePlots::initialize() {
 
 
 
-void makePlots::execute() {
-    makeHistoCh0();
+void makePlots::execute() {    
+    //makeHistoCh0();
     //makeHistoCh1();
     //doCoincidence(0, 1, 0.0055);
-    collectWithFilter("Rn222", 0.56, 0.8);
-    collectWithFilter("K40", 1.5, 1.64);
-    collectWithFilter("peak04", 0.385, 0.41);
-    collectWithFilter("peak24", 2.35, 2.45);
+    //energyRange = "peak06";
+    //assignCutEnergyRange(energyRange, lower, upper);
+    //collectWithFilter(energyRange, lower, upper);
+    //collectWithFilter("peak16", 1.5, 1.64);
+    //collectWithFilter("peak04", 0.385, 0.41);
+    //collectWithFilter("peak24", 2.35, 2.45);
+    collectWithFilter("0to25", 0., 2.5);
+
+    //collectWithDynamicFilter("peak16");
+
     outfile->Close();
 }
 
@@ -293,6 +300,196 @@ void makePlots::collectWithFilter(string filtingRegion,
 
 
 
+void makePlots::collectWithDynamicFilter(string filtingRegion) {
+    initialize();
+
+    TFile* fmean = new TFile("ready/fitResult.root");
+    TTree* meanTree;
+    int entryNo;
+    int year;
+    int month;
+    int day;
+    int hour;
+    int minute;
+    double sec;
+
+    double meang04;
+    double meang06;
+    double meang16;
+
+    double stdg04;
+    double stdg06;
+    double stdg16;
+
+    fmean->GetObject("dataFitting", meanTree);
+    meanTree->SetBranchAddress("entryNo", &entryNo);
+    meanTree->SetBranchAddress("year", &year);
+    meanTree->SetBranchAddress("month", &month);
+    meanTree->SetBranchAddress("day", &day);
+    meanTree->SetBranchAddress("hour", &hour);
+    meanTree->SetBranchAddress("minute", &minute);
+    meanTree->SetBranchAddress("second", &sec);
+
+    meanTree->SetBranchAddress("meang04", &meang04);
+    meanTree->SetBranchAddress("meang06", &meang06);
+    meanTree->SetBranchAddress("meang16", &meang16);
+
+    meanTree->SetBranchAddress("stdg04", &stdg04);
+    meanTree->SetBranchAddress("stdg06", &stdg06);
+    meanTree->SetBranchAddress("stdg16", &stdg16);
+
+    map<string, double> mapmeang04;
+    map<string, double> mapmeang06;
+    map<string, double> mapmeang16;
+
+    map<string, double> mapstdg04;
+    map<string, double> mapstdg06;
+    map<string, double> mapstdg16;
+
+    Long64_t nentries = meanTree->GetEntries();
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	meanTree->GetEntry(entry);
+	char tag[15];
+	sprintf(tag, "%04d%02d%02d%02d%02d%02.f", year, month, day, hour, minute, sec);
+
+	mapmeang04[tag] = meang04;
+	mapmeang06[tag] = meang06;
+	mapmeang16[tag] = meang16;
+
+	mapstdg04[tag] = stdg04;
+	mapstdg06[tag] = stdg06;
+	mapstdg16[tag] = stdg16;
+    }
+
+    for(unsigned int iInt = 0; iInt < startDateTime.size(); iInt++) {
+	bool willBeDealed = false;
+	Calendar* dtStart = new Calendar(startDateTime[iInt]);
+	Calendar* dtEnd = new Calendar(endDateTime[iInt]);
+
+	TH1D* hCh0 = new TH1D(dtStart->getTime().c_str(), "Maximum as Amplitude of Channel 0", bin[0], min[0], max[0]);
+
+	string folderName = "withFilt_" + filtingRegion;
+	if(outfile->GetDirectory(folderName.c_str()) == nullptr)
+	    outfile->mkdir(folderName.c_str());
+
+	char histoPath[150];
+	sprintf(histoPath, "%s/%s", folderName.c_str(), dtStart->getDate().c_str());
+	if(outfile->GetDirectory(histoPath) == nullptr)
+	    outfile->mkdir(histoPath, histoPath);
+
+	cout << dtStart->getDateTime() << " - " << dtEnd->getDateTime() << endl;
+
+	for(unsigned int iData = 0; iData < dataList.size(); iData++) {
+	    if(iData + 1 >= dataList.size())
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, "null");
+	    else
+		willBeDealed = hasDataInInterval(dataList[iData], dtStart, dtEnd, dataList[iData + 1]);
+
+	    if(willBeDealed) {
+		cout << dataList[iData] << endl
+		     << filtingRegion << endl;
+
+		string tag = dtStart->getDateTime();
+		double low = 0.;
+		double up = 2.5;
+		double stdwidth = 2.;
+
+		if(filtingRegion == "peak04") {
+		    low = mapmeang04[tag] - stdwidth*mapstdg04[tag];
+		    up = mapmeang04[tag] + stdwidth*mapstdg04[tag];
+		} else if(filtingRegion == "peak06") {
+		    low = mapmeang06[tag] - stdwidth*mapstdg06[tag];
+		    up = mapmeang06[tag] + stdwidth*mapstdg06[tag];
+		} else if(filtingRegion == "peak16") {
+		    low = mapmeang16[tag] - stdwidth*mapstdg16[tag];
+		    up = mapmeang16[tag] + stdwidth*mapstdg16[tag];
+		}
+
+		DataReader* dr = new DataReader(dataList[iData]);
+		dr->setQuantity(quantity);
+		dr->setStartDateTime(dtStart->getDateTime());
+		dr->setEndDateTime(dtEnd->getDateTime());
+		dr->setThreshold(true, 0.3);
+		dr->runFilterFilling(hCh0, 0, low, up);
+
+		delete dr;
+	    }
+	}
+
+	if(quantity == "Voltage")
+	    hCh0->SetXTitle("Voltage (V)");
+	else if(quantity == "Energy")
+	    hCh0->SetXTitle("Energy (MeV)");
+
+	hCh0->SetYTitle("Entries");
+	outfile->cd(histoPath);
+	hCh0->Write();
+
+	delete hCh0;
+	delete dtEnd;
+	delete dtStart;
+    }
+}
+
+
+
+void makePlots::mergeHist() {
+    vector<string> mergingFilename;
+
+    mergingFilename.push_back("analyzedFile/0418to0607oneHist.root");
+    mergingFilename.push_back("analyzedFile/0418to0607aHistPD.root");
+    mergingFilename.push_back("analyzedFile/0418to0607aHistP12h.root");
+    mergingFilename.push_back("analyzedFile/0418to0607aHistP06h.root");
+    mergingFilename.push_back("analyzedFile/0418to0607aHistP02h.root");
+    mergingFilename.push_back("analyzedFile/0418to0607aHistP01h.root");
+
+    for(unsigned int i = 0; i < mergingFilename.size(); i++) {
+	TFile* mergingFile = new TFile(mergingFilename[i].c_str(), "UPDATE");
+
+	string dir04n06name = "withFilt_peak04n06";
+	if(mergingFile->GetDirectory(dir04n06name.c_str()) == nullptr)
+	    mergingFile->mkdir(dir04n06name.c_str());
+
+	string dir04name = "withFilt_peak04";
+	string dir06name = "withFilt_peak06";
+
+	TDirectory* dir04n06 = mergingFile->GetDirectory(dir04n06name.c_str());
+	TDirectory* dir04 = mergingFile->GetDirectory(dir04name.c_str());
+	TDirectory* dir06 = mergingFile->GetDirectory(dir06name.c_str());
+	TList* listDate = dir04->GetListOfKeys();
+	listDate->Sort();
+
+	TIter iterDate(listDate);
+	TObject* objDate = nullptr;
+	while((objDate = iterDate())) {
+	    if(dir04n06->GetDirectory(objDate->GetName()) == nullptr)
+		dir04n06->mkdir(objDate->GetName());
+
+	    TDirectory* dir04n06Date = dir04n06->GetDirectory(objDate->GetName());
+	    TDirectory* dir04Date = dir04->GetDirectory(objDate->GetName());
+	    TDirectory* dir06Date = dir06->GetDirectory(objDate->GetName());
+	    TList* listTime = dir04Date->GetListOfKeys();
+
+	    TIter iterTime(listTime);
+	    TObject* objTime = nullptr;
+	    while((objTime = iterTime())) {
+		TH1D* thisH04 = (TH1D*)dir04Date->Get(objTime->GetName());
+		TH1D* thisH06 = (TH1D*)dir06Date->Get(objTime->GetName());
+		TH1D* thisH04n06 = (TH1D*)thisH04->Clone();
+		thisH04n06->Add(thisH06);
+
+		dir04n06Date->cd();
+		thisH04n06->Write();
+	    }
+	}
+
+	mergingFile->Close();
+	delete mergingFile;
+    }
+}
+
+
+
 void makePlots::test() {
     
     ifstream testFile;
@@ -408,7 +605,7 @@ void makePlots::prepareOutputFile(string outfileName) {
     char outputFilename[300];
     sprintf(outputFilename, "analyzedFile/%s.root", outfileName.c_str());
     if(outfile == nullptr)
-	outfile = new TFile(outputFilename, "RECREATE");
+	outfile = new TFile(outputFilename, fileStat.c_str());
     else {
 	//outfile->Close();
 	//outfile = outfile->Open(outputFilename, "UPDATE");
@@ -464,6 +661,11 @@ void makePlots::assignSingleLengthOfIntervals() {
 	cld->addDuration(0, 0, interHour, interMin, interSec);
 	endDateTime.push_back(cld->getDateTime());
     }
+}
+
+
+
+void makePlots::assignCutEnergyRange(string peak, double& lower, double& upper) {
 }
 
 

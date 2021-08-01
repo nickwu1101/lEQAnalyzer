@@ -62,6 +62,7 @@ public:
     double getRatioSM(int i = 0);
     double getErrorCGaus(int i = 0);
     double getErrorM(int i = 0);
+    double getEstEvent();
 
     void   getSetRange(double& low, double& up) {
 	low = lowerRange; up = upperRange; };

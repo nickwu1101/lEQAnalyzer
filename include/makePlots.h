@@ -27,8 +27,10 @@ public:
     void execute();
     void makeHistoCh0();
     void makeHistoCh1();
-    void doCoincidence(int, int, double);
-    void collectWithFilter(string, double, double);
+    void doCoincidence(int goalCh, int threCh, double threshold);
+    void collectWithFilter(string filtingRegion, double low, double up);
+    void collectWithDynamicFilter(string filtingRegion);
+    void mergeHist();
     void test();
 
 private:
@@ -44,6 +46,7 @@ private:
     string quantity;
 
     TFile* outfile;
+    string fileStat;
     string filename;
     int    anaType;
     bool   isFileSet;
@@ -52,12 +55,16 @@ private:
     void initialize();
     void readAnalysisParameter();
     void prepareDataList();
-    void prepareOutputFile(string);
+    void prepareOutputFile(string outileName);
     void assignTimeIntervals();
     void assignSingleLengthOfIntervals();
-    bool hasDataInInterval(string, string, string, string);
-    bool hasDataInInterval(string, Calendar*, Calendar*, string);
-    bool hasDataInInterval(Calendar*, Calendar*, Calendar*, Calendar*);
+    void assignCutEnergyRange(string, double&, double&);
+    bool hasDataInInterval(string inputDTStr, string startDTStr,
+			   string endDTStr, string nextDTStr);
+    bool hasDataInInterval(string inputDTStr, Calendar* startDT,
+			   Calendar* endDT, string nextDTStr);
+    bool hasDataInInterval(Calendar* inputDT, Calendar* startDT,
+			   Calendar* endDT, Calendar* nextDT);
 };
 
 #endif

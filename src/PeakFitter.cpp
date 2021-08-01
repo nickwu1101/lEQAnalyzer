@@ -9,11 +9,12 @@
 PeakFitter::PeakFitter(TH1D* inputH, string peakType) {
     histogram = inputH;
 
-    setPeakType(peakType);
-
     outputGraphFilename = "";
     setFolderPath("plotting/fittingHualien");
     setHistoName("");
+
+    setPeakType(peakType);
+
     needZoom = false;
     needExtend = false;
     fitptr = nullptr;
@@ -94,9 +95,26 @@ void PeakFitter::fitPeak() {
 				  + (1 - ydown)*gPad->GetUymin(),
 				  gPad->GetUxmax(), gPad->GetUymax());
 
+    TF1* fGaus = new TF1("fgaus", "gausn", 0., 5.);
+    fGaus->SetParameter(0, fitptr->Parameter(2));
+    fGaus->SetParameter(1, fitptr->Parameter(3));
+    fGaus->SetParameter(2, fitptr->Parameter(4));
+    fGaus->SetLineColor(kBlue);
+    //fGaus->Draw("SAME");
+
+    TF1* fExpo = new TF1("fexpo", "expo", 0., 5.);
+    fExpo->SetParameter(0, fitptr->Parameter(0));
+    fExpo->SetParameter(1, fitptr->Parameter(1));
+    fExpo->SetLineColor(kGreen);
+    //fExpo->Draw("SAME");
+
     char line[100];
     pt->AddText("Statistics");
-    sprintf(line, "Chi2: %f", fitptr->Chi2());
+    sprintf(line, "#chi^{2}: %f", fitptr->Chi2());
+    pt->AddText(line);
+    sprintf(line, "Ndf: %d", fitptr->Ndf());
+    pt->AddText(line);
+    sprintf(line, "#chi^{2}/Ndf: %f", fitptr->Chi2()/(double)fitptr->Ndf());
     pt->AddText(line);
     sprintf(line, "cPow: %f", fitptr->Parameter(0));
     pt->AddText(line);
@@ -116,12 +134,23 @@ void PeakFitter::fitPeak() {
 	sprintf(line, "Error of Mean%d: %f", i + 1, fitptr->Error(3*i + 3));
 	pt->AddText(line);
     }
+    /*
+    sprintf(line, "Integral: %f", fGaus->Integral(lowerRange, upperRange)/(5./865.));
+    pt->AddText(line);
+    sprintf(line, "ExpoInte: %f", fExpo->Integral(lowerRange, upperRange)/(5./865.));
+    pt->AddText(line);
+    */
 
     pt->Draw();
+
+    
 
     c->Update();
     c->Print(outputGraphFilename.c_str());
     c->Close();
+
+    delete fExpo;
+    delete fGaus;
 
     if(fExtend != nullptr)
 	delete fExtend;
@@ -220,52 +249,99 @@ void PeakFitter::setPeakNumb(int input) {
 void PeakFitter::setPeakType(string inputStr) {
     peakType = inputStr;
 
-    if(peakType == "K40") {
-	folderPath = "plotting/fittingHualien/K40";
+    if(peakType == "K40" || peakType == "peak16") {
+	folderPath = "plotting/fittingHualien/peak16";
 	setPeakNumb(1);
 
+	/* For Voltage (V)
 	setRange(1.4, 1.8);
 	setCPow(10., 5., 50.);
 	setExpo(-3., -5., 0.);
 	setCGauss(1000., 0., 100000000.);
 	setMean(1.55, 1.5, 1.65);
 	setSTD(0.01, 0., 0.1);
-    } else if(peakType == "Rn222") {
-	folderPath = "plotting/fittingHualien/Rn222";
+	*/
+
+	// For Energy (MeV)
+	setRange(1.3, 1.6);
+	setCPow(10., 5., 50.);
+	setExpo(-3., -5., 0.);
+	setCGauss(1000., 0., 100000000.);
+	setMean(1.45, 1.4, 1.5);
+	setSTD(0.01, 0., 0.1);
+    } else if(peakType == "Rn222" || peakType == "peak06") {
+	folderPath = "plotting/fittingHualien/peak06";
 	setPeakNumb(1);
 
+	/* For Voltage (V)
 	setRange(0.6, 0.84);
 	setCPow(10., -100., 100.);
 	setExpo(-3., -5., 0.);
 	setCGauss(1000., 0., 100000000., 0);
 	setMean(0.725, 0.7, 0.75, 0);
 	setSTD(0.01, 0., 0.1, 0);
+	*/
+
+	// For Energy (MeV)
+	setRange(0.5, 0.7);
+	setCPow(10., -100., 100.);
+	setExpo(-3., -5., 0.);
+	setCGauss(1000., 0., 100000000., 0);
+	setMean(0.6, 0.55, 0.65, 0);
+	setSTD(0.01, 0., 0.1, 0);
 
 	if(peakNumb >= 2) {
+	    /* For Voltage (V)
 	    setCGauss(1000., 0., 100000000., 1);
 	    setMean(0.58, 0.55, 0.6, 1);
+	    setSTD(0.01, 0., 0.1, 1);
+	    */
+
+	    // For Energy (MeV)
+	    setCGauss(1000., 0., 100000000., 1);
+	    setMean(0.48, 0.45, 0.5, 1);
 	    setSTD(0.01, 0., 0.1, 1);
 	}
     } else if(peakType == "peak04") {
 	folderPath = "plotting/fittingHualien/peak04";
 	setPeakNumb(1);
 
+	/* For Voltage (V)
 	setRange(0.35, 0.45);
 	setCPow(10., -100., 100.);
 	setExpo(-3., -5., 0.);
 	setCGauss(1000., 0., 100000000., 0);
 	setMean(0.4, 0.38, 0.41, 0);
 	setSTD(0.01, 0., 0.1, 0);
+	*/
+
+	// For Energy (MeV)
+	setRange(0.25, 0.35);
+	setCPow(10., -100., 100.);
+	setExpo(-3., -5., 0.);
+	setCGauss(1000., 0., 100000000.);
+	setMean(0.29, 0.275, 0.3);
+	setSTD(0.01, 0., 0.1);
     } else if(peakType == "peak24") {
 	folderPath = "plotting/fittingHualien/peak24";
 	setPeakNumb(1);
 
+	/* For Voltage (V)
 	setRange(2.3, 2.55);
 	setCPow(10., -100., 100.);
 	setExpo(-3., -5., 0.);
 	setCGauss(1000., 0., 100000000., 0);
 	setMean(2.4, 2.35, 2.45, 0);
 	setSTD(0.01, 0., 0.1, 0);
+	*/
+
+	// For Energy (MeV)
+	setRange(2.15, 2.45);
+	setCPow(10., -100., 100.);
+	setExpo(-3., -100., 0.);
+	setCGauss(1000., 0., 100000000.);
+	setMean(2.3, 2.25, 2.35);
+	setSTD(0.01, 0., 0.1);
     } else if(peakType == "expo") {
 	folderPath = "plotting/fittingHualien";
 	setPeakNumb(0);
@@ -334,6 +410,16 @@ double PeakFitter::getErrorCGaus(int i) {
 
 double PeakFitter::getErrorM(int i) {
     return fitptr->ParError(3*i + 3);
+}
+
+double PeakFitter::getEstEvent() {
+    TF1* fGaus = new TF1("fgaus", "gausn", 0., 5.);
+    fGaus->SetParameter(0, fitptr->Parameter(2));
+    fGaus->SetParameter(1, fitptr->Parameter(3));
+    fGaus->SetParameter(2, fitptr->Parameter(4));
+    return fGaus->Integral(lowerRange, upperRange)/(5./865.);
+
+    delete fGaus;
 }
 
 

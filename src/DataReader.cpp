@@ -185,10 +185,11 @@ void DataReader::runFilterFilling(TH1D* inputH, int channel,
 	if(*eventDateTime >= *startDateTime
 	   && *eventDateTime <= *endDateTime) {
 	    if(!doUseThreshold || fillValue >= threshold) {
-		if(fillValue <= up && fillValue >= low) {
-		    if(quantity == "Voltage")
+		if(quantity == "Voltage") {
+		    if(fillValue <= up && fillValue >= low)
 			inputH->Fill(fillValue);
-		    else if(quantity == "Energy")
+		} else if(quantity == "Energy") {
+		    if(V2MeV(fillValue) <= up && V2MeV(fillValue) >= low)
 			inputH->Fill(V2MeV(fillValue));
 		}
 	    } else if(*eventDateTime > *endDateTime) {
@@ -243,5 +244,5 @@ void DataReader::readYAML() {
 
 
 double DataReader::V2MeV(double input) {
-    return (input - 0.134882)/1.013791;
+    return (input - 0.112214)/1.;
 }

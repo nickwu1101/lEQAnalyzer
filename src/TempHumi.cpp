@@ -3,8 +3,11 @@
 #include "Calendar.h"
 
 #include <TAxis.h>
+#include <TCanvas.h>
 #include <TFile.h>
 #include <TGraph.h>
+#include <TGraphErrors.h>
+#include <TMath.h>
 
 #include <dirent.h>
 #include <fstream>
@@ -18,7 +21,10 @@ TempHumi::TempHumi() {
 
 
 
-TempHumi::~TempHumi() {}
+TempHumi::~TempHumi() {
+    delete endDateTime;
+    delete startDateTime;
+}
 
 
 
@@ -27,6 +33,7 @@ void TempHumi::execute() {
     prepareDataList();
     doTempHumiMap();
     makeTempHumiPlotting();
+    printCanvas();
 }
 
 
@@ -201,6 +208,109 @@ void TempHumi::doTempHumiMap() {
 
 
 
+void TempHumi::printCanvas() {
+    TCanvas* c = new TCanvas("c", "c", 1400, 800);
+    TGraph* gTlong = new TGraph();
+    TGraph* gHlong = new TGraph();
+
+    TFile* f = new TFile("analyzedFile/TempHumi.root", "READ");
+
+    map<double, double> temp;
+    map<double, double> humi;
+
+    Calendar* startDateTime = nullptr;
+
+    TDirectory* dirTemp = f->GetDirectory("temperature");
+    TList* listDateT = dirTemp->GetListOfKeys();
+    listDateT->Sort();
+
+    TIter iterDateT(listDateT);
+    TObject* objDateT = nullptr;
+    while((objDateT = iterDateT())) {
+	if(startDateTime == nullptr)
+	    startDateTime = new Calendar((string)(objDateT->GetName()) + "000000");
+
+	Calendar* thisDateTime = new Calendar((string)(objDateT->GetName()) + "000000");
+
+	TGraph* gT = (TGraph*)dirTemp->Get(objDateT->GetName());
+
+	for(int i = 0; i < gT->GetN(); i++) {
+	    double hourFromDay = ((double)thisDateTime->getYDay() - (double)startDateTime->getYDay())*24.;
+	    double hourInDay = 0.;
+	    double thisTemp = 0.;
+
+	    gT->GetPoint(i, hourInDay, thisTemp);
+
+	    double countHour = hourFromDay + hourInDay;
+	    double countDay = countHour/24.;
+
+	    temp[countDay] = thisTemp;
+	}
+
+	delete thisDateTime;
+    }
+
+    TDirectory* dirHumi = f->GetDirectory("humidity");
+    TList* listDateH = dirHumi->GetListOfKeys();
+    listDateH->Sort();
+
+    TIter iterDateH(listDateH);
+    TObject* objDateH = nullptr;
+    while((objDateH = iterDateH())) {
+	if(startDateTime == nullptr)
+	    startDateTime = new Calendar((string)(objDateH->GetName()) + "000000");
+
+	Calendar* thisDateTime = new Calendar((string) (objDateH->GetName()) + "000000");
+
+	TGraph* gH = (TGraph*)dirHumi->Get(objDateH->GetName());
+
+	for(int i = 0; i < gH->GetN(); i++) {
+	    double hourFromDay = ((double)thisDateTime->getYDay() - (double)startDateTime->getYDay())*24.;
+	    double hourInDay = 0.;
+	    double thisHumi = 0.;
+
+	    gH->GetPoint(i, hourInDay, thisHumi);
+
+	    double countHour = hourFromDay + hourInDay;
+	    double countDay = countHour/24.;
+
+	    humi[countDay] = thisHumi;
+	}
+
+	delete thisDateTime;
+    }
+
+    for(map<double, double>::iterator it = temp.begin(); it != temp.end(); ++it) {
+	gTlong->SetPoint(gTlong->GetN(), it->first, it->second);
+    }
+
+    for(map<double, double>::iterator it = humi.begin(); it != humi.end(); ++it) {
+	gHlong->SetPoint(gHlong->GetN(), it->first, it->second);
+    }
+
+    c->Divide(1, 2);
+    c->cd(1);
+    setGraphAtt(gTlong, "temp");
+    gTlong->Draw("AL");
+
+    c->cd(2);
+    setGraphAtt(gHlong, "humi");
+    gHlong->Draw("ALC");
+
+    c->Update();
+    c->Print("plotting/fittingHualien/temphumi.png");
+
+    if(startDateTime != nullptr)
+	delete startDateTime;
+
+    delete f;
+    delete gHlong;
+    delete gTlong;
+    delete c;
+}
+
+
+
 void TempHumi::setEndDateTime(string dtStr) {
     endDateTime->setDateTime(dtStr);
 }
@@ -209,6 +319,32 @@ void TempHumi::setEndDateTime(string dtStr) {
 
 void TempHumi::setStartDateTime(string dtStr) {
     startDateTime->setDateTime(dtStr);
+}
+
+
+
+void TempHumi::setGraphAtt(TGraph* inputG, string term) {
+    string graphTitle = "";
+    string yAxisTitle = "";
+    Color_t termColor = kBlack;
+    if(term == "temp") {
+	graphTitle = "Temperature";
+	yAxisTitle = "Temperature ({}^{#circ}C)";
+	termColor = kRed;
+    } else if(term == "humi") {
+	graphTitle = "Humidity";
+	yAxisTitle = "Humidity \%";
+	termColor = kBlue;
+    }
+
+    inputG->SetTitle(graphTitle.c_str());
+    inputG->GetXaxis()->SetTitle("Days");
+    inputG->GetYaxis()->SetTitle(yAxisTitle.c_str());
+    inputG->SetLineWidth(2);
+    inputG->SetLineColor(termColor);
+    inputG->SetMarkerSize(1);
+    inputG->SetMarkerStyle(kFullCircle);
+    inputG->SetMarkerColor(termColor);
 }
 
 
@@ -232,12 +368,69 @@ double TempHumi::calAvgTemp(string dateTime) {
 	}
     }
 
-    double avgTemp = 0;
+    double avgTemp = 0.;
     for(unsigned int i = 0; i < measuredTemp.size(); i++)
 	avgTemp += measuredTemp[i];
 
     avgTemp /= (double)measuredTemp.size();
     return avgTemp;
+}
+
+
+
+double TempHumi::calStdTemp(string dateTime) {
+    ifstream DHTfile;
+    DHTfile.open("csv/" + dateTime + ".csv");
+
+    vector<double> measuredTemp;
+
+    string line;
+    while(DHTfile.is_open()) {
+	if(DHTfile.eof()) break;
+	getline(DHTfile, line);
+
+	if(line.length() != 0) {
+	    string cutLine = line.substr(line.find_first_of(",") + 1);
+	    string tempStr = cutLine.substr(0, cutLine.find_first_of(","));
+
+	    measuredTemp.push_back(atof(tempStr.c_str()));
+	}
+    }
+
+    double stdTemp = 0.;
+    for(unsigned int i = 0; i < measuredTemp.size(); i++)
+	stdTemp += measuredTemp[i]*measuredTemp[i];
+
+    double avgTemp = calAvgTemp(dateTime);
+    stdTemp = stdTemp - (double)measuredTemp.size()*avgTemp*avgTemp;
+    stdTemp /= (double)measuredTemp.size() - 1;
+    stdTemp = TMath::Sqrt(stdTemp);
+    return stdTemp;
+}
+
+
+
+double TempHumi::calErrTemp(string dateTime) {
+    ifstream DHTfile;
+    DHTfile.open("csv/" + dateTime + ".csv");
+
+    vector<double> measuredTemp;
+
+    string line;
+    while(DHTfile.is_open()) {
+	if(DHTfile.eof()) break;
+	getline(DHTfile, line);
+
+	if(line.length() != 0) {
+	    string cutLine = line.substr(line.find_first_of(",") + 1);
+	    string tempStr = cutLine.substr(0, cutLine.find_first_of(","));
+
+	    measuredTemp.push_back(atof(tempStr.c_str()));
+	}
+    }
+
+    double errTemp = calStdTemp(dateTime)/TMath::Sqrt(measuredTemp.size());
+    return errTemp;
 }
 
 
@@ -261,12 +454,69 @@ double TempHumi::calAvgHumi(string dateTime) {
 	}
     }
 
-    double avgHumi = 0;
+    double avgHumi = 0.;
     for(unsigned int i = 0; i < measuredHumi.size(); i++)
 	avgHumi += measuredHumi[i];
 
     avgHumi /= (double)measuredHumi.size();
     return avgHumi;
+}
+
+
+
+double TempHumi::calStdHumi(string dateTime) {
+    ifstream DHTfile;
+    DHTfile.open("csv/" + dateTime + ".csv");
+
+    vector<double> measuredHumi;
+
+    string line;
+    while(DHTfile.is_open()) {
+	if(DHTfile.eof()) break;
+	getline(DHTfile, line);
+
+	if(line.length() != 0) {
+	    string cutLine = line.substr(line.find_first_of(",") + 1);
+	    string humiStr = cutLine.substr(cutLine.find_first_of(",") + 1);
+
+	    measuredHumi.push_back(atof(humiStr.c_str()));
+	}
+    }
+
+    double stdHumi = 0.;
+    for(unsigned int i = 0; i < measuredHumi.size(); i++)
+	stdHumi += measuredHumi[i]*measuredHumi[i];
+
+    double avgHumi = calAvgHumi(dateTime);
+    stdHumi = stdHumi - (double)measuredHumi.size()*avgHumi*avgHumi;
+    stdHumi /= (double)measuredHumi.size() - 1;
+    stdHumi = TMath::Sqrt(stdHumi);
+    return stdHumi;
+}
+
+
+
+double TempHumi::calErrHumi(string dateTime) {
+    ifstream DHTfile;
+    DHTfile.open("csv/" + dateTime + ".csv");
+
+    vector<double> measuredHumi;
+
+    string line;
+    while(DHTfile.is_open()) {
+	if(DHTfile.eof()) break;
+	getline(DHTfile, line);
+
+	if(line.length() != 0) {
+	    string cutLine = line.substr(line.find_first_of(",") + 1);
+	    string humiStr = cutLine.substr(cutLine.find_first_of(",") + 1);
+
+	    measuredHumi.push_back(atof(humiStr.c_str()));
+	}
+    }
+
+    double errHumi = calStdHumi(dateTime)/TMath::Sqrt(measuredHumi.size());
+    return errHumi;
 }
 
 
