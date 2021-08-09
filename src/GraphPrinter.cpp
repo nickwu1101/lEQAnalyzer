@@ -45,6 +45,7 @@ void GraphPrinter::test() {
     //printCountingTempCorrelation();
 
     printOverlapExpAndSimulation();
+    printOverlapExpAndBkg();
 }
 
 
@@ -1622,6 +1623,44 @@ void GraphPrinter::printOverlapExpAndSimulation() {
     delete fexp;
 
     delete c;
+}
+
+
+
+void GraphPrinter::printOverlapExpAndBkg() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+    TFile* fexp = new TFile("ready/0418to0607oneHist.root", "READ");
+    TFile* fbkg = new TFile("ready/0329to0330oneHist.root", "READ");
+
+    TH1D* hexp = (TH1D*)fexp->Get("HistoCh0/20210418/000000");
+    TH1D* hbkg = (TH1D*)fbkg->Get("HistoCh0/20210329/200000");
+
+    hexp->Scale(1./919636);
+    hbkg->Scale(1./8696.08);
+
+    hexp->SetLineColor(kBlue);
+    hbkg->SetLineColor(kRed);
+
+    hbkg->Draw("HISTO");
+    hexp->Draw("HISTO SAME");
+
+    hbkg->SetStats(kFALSE);
+    TLegend* lg = new TLegend(0.7, 0.65, 0.9, 0.9);
+    lg->SetHeader("Legend");
+    lg->AddEntry(hexp, "At Hualien");
+    lg->AddEntry(hbkg, "In Lab 923");
+    lg->Draw();
+
+    cGraph->Update();
+    cGraph->Print("plotting/ExpAndBkg.png");
+
+    fbkg->Close();
+    delete fbkg;
+
+    fexp->Close();
+    delete fexp;
+
+    delete cGraph;
 }
 
 

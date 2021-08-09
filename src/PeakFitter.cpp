@@ -422,6 +422,20 @@ double PeakFitter::getEstEvent() {
     delete fGaus;
 }
 
+double PeakFitter::getFuncMax() {
+    TF1* peak = new TF1("peak", fitterStr.c_str(), 0., 5.);
+    peak->SetRange(lowerRange, upperRange);
+    peak->SetParameter(0, fitptr->Parameter(0));
+    peak->SetParameter(1, fitptr->Parameter(1));
+    peak->SetParameter(2, fitptr->Parameter(2));
+    peak->SetParameter(3, fitptr->Parameter(3));
+    peak->SetParameter(4, fitptr->Parameter(4));
+
+    double max = peak->GetMaximum(lowerRange, upperRange);
+    delete peak;
+    return max;
+}
+
 
 
 void PeakFitter::getSetCExp(double& start, double& low, double& up) {

@@ -63,6 +63,7 @@ public:
     double getErrorCGaus(int i = 0);
     double getErrorM(int i = 0);
     double getEstEvent();
+    double getFuncMax();
 
     void   getSetRange(double& low, double& up) {
 	low = lowerRange; up = upperRange; };

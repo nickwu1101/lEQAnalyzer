@@ -31,6 +31,7 @@ public:
     void   printCompareCorrectionCountingGraph();
 
     void   printOverlapExpAndSimulation();
+    void   printOverlapExpAndBkg();
 
 private:
     vector<double> vd;

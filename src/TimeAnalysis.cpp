@@ -25,11 +25,13 @@ void TimeAnalysis::execute() {
 
 void TimeAnalysis::test() {
     //analyzeByFitting();
-    analyzeByCounting();
+    //analyzeByCounting();
     //correctFittingAnaByTemp();
     //correctCountingAnaByTemp();
     //normalizeFittingResult();
-    normalizeCountingResult();
+    //normalizeCountingResult();
+
+    fitOnTotalTime();
 }
 
 
@@ -1323,6 +1325,37 @@ void TimeAnalysis::correctCountingAnaByTemp() {
     finput->Close();
     delete finput;
     delete th;
+}
+
+
+
+void TimeAnalysis::fitOnTotalTime() {
+    TFile* fexp = new TFile("ready/0418to0607oneHist.root", "READ");
+    TFile* flab = new TFile("ready/0329to0330oneHist.root", "READ");
+
+    TH1D* hexp = (TH1D*)fexp->Get("HistoCh0/20210418/000000");
+    TH1D* hlab = (TH1D*)flab->Get("HistoCh0/20210329/200000");
+
+    PeakFitter* pfexp = new PeakFitter(hexp, "peak16");
+    pfexp->setHistoName("20210418000000_peak16");
+    pfexp->setNeedZoom(true);
+    pfexp->fitPeak();
+
+    PeakFitter* pflab = new PeakFitter(hlab, "peak16");
+    pflab->setHistoName("20210329200000_peak16");
+    pflab->setNeedZoom(true);
+    pflab->fitPeak();
+
+    cout << pfexp->getFuncMax() << endl << pflab->getFuncMax() << endl;
+
+    delete pflab;
+    delete pfexp;
+
+    flab->Close();
+    delete flab;
+
+    fexp->Close();
+    delete fexp;
 }
 
 

@@ -22,6 +22,8 @@ public:
     void correctCountingAnaByTemp();
     void correctCountingAnaByTempU();
 
+    void fitOnTotalTime();
+
 private:
     vector<double> vd;
     string handledTU;

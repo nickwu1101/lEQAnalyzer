@@ -22,7 +22,7 @@ makePlots::makePlots() {
 
     outfile = nullptr;
     filename = "";
-    fileStat = "UPDATE";
+    fileStat = "RECREATE";
     isFileSet = false;
     isInit = false;
 }
@@ -54,7 +54,7 @@ void makePlots::initialize() {
 
 
 void makePlots::execute() {    
-    //makeHistoCh0();
+    makeHistoCh0();
     //makeHistoCh1();
     //doCoincidence(0, 1, 0.0055);
     //energyRange = "peak06";
@@ -63,7 +63,7 @@ void makePlots::execute() {
     //collectWithFilter("peak16", 1.5, 1.64);
     //collectWithFilter("peak04", 0.385, 0.41);
     //collectWithFilter("peak24", 2.35, 2.45);
-    collectWithFilter("0to25", 0., 2.5);
+    //collectWithFilter("0to25", 0., 2.5);
 
     //collectWithDynamicFilter("peak16");
 
