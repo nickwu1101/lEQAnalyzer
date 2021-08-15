@@ -10,6 +10,7 @@
 
 TimeAnalysis::TimeAnalysis() {
     handledTU = "P2H";
+    quantity = "Shifting";
 }
 
 
@@ -24,23 +25,28 @@ void TimeAnalysis::execute() {
 
 
 void TimeAnalysis::test() {
-    //analyzeByFitting();
+    analyzeByFitting();
     //analyzeByCounting();
     //correctFittingAnaByTemp();
     //correctCountingAnaByTemp();
     //normalizeFittingResult();
     //normalizeCountingResult();
 
-    fitOnTotalTime();
+    //fitOnTotalTime();
 }
 
 
 
 void TimeAnalysis::analyzeByFitting () {
     TFile* foutput = nullptr;
-    if(handledTU == "P2H")
-	foutput = new TFile("ready/fitResult.root", "RECREATE");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutput = new TFile("ready/fitResult.root", "RECREATE");
+	else if(quantity == "Voltage")
+	    foutput = new TFile("ready/fitResultV.root", "RECREATE");
+	else if(quantity == "Shifting")
+	    foutput = new TFile("ready/fitResultS.root", "RECREATE");
+    } else if(handledTU == "P6H")
 	foutput = new TFile("ready/fitResult6.root", "RECREATE");
 
     int entryNo;
@@ -160,9 +166,14 @@ void TimeAnalysis::analyzeByFitting () {
 
 	if(thisTU == "PT")
 	    continue;
-	else if(thisTU == "P2H")
-	    file = new TFile("ready/0418to0607aHistP02h.root", "READ");
-	else if(thisTU == "P6H")
+	else if(thisTU == "P2H") {
+	    if(quantity == "Energy")
+		file = new TFile("ready/0418to0607aHistP02h.root", "READ");
+	    else if(quantity == "Voltage")
+		file = new TFile("ready/0418to0607aHistP02hV.root", "READ");
+	    else if(quantity == "Shifting")
+		file = new TFile("ready/0418to0607aHistP02hS.root", "READ");
+	} else if(thisTU == "P6H")
 	    file = new TFile("ready/0418to0607aHistP06h.root", "READ");
 	else
 	    continue;
@@ -206,6 +217,7 @@ void TimeAnalysis::analyzeByFitting () {
 		    PeakFitter* pf = new PeakFitter(thisH, thisPeak);
 		    string histoName = (string)histTitle + "_" + thisPeak;
 		    pf->setHistoName(histoName);
+		    pf->setQuantity(quantity);
 		    pf->setNeedZoom(true);
 
 		    pf->fitPeak();

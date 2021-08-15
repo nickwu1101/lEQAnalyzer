@@ -34,9 +34,9 @@ public:
     TBranch *b_timestamp;
 
     void     initialize();
-    void     runFillingLoop(TH1D*, int);
-    void     runCoincidenceFilling(TH1D*, int, double);
-    void     runFilterFilling(TH1D*, int, double, double);
+    void     runFillingLoop(TH1D* inputH, int channel);
+    void     runCoincidenceFilling(TH1D* inputH, int channel, double threshold);
+    void     runFilterFilling(TH1D* inputH, int channel, double low, double up);
 
     void     setEndDateTime(string);
     void     setProjectName(string inputStr) { projectName = inputStr; };

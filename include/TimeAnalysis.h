@@ -27,6 +27,7 @@ public:
 private:
     vector<double> vd;
     string handledTU;
+    string quantity;
     double correctByTemp(string, string, string, double, double);
     double calErrAfterCorrect(string, string, string, double, double, double);
     double takeTimeLength(string);

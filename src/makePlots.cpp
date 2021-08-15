@@ -114,7 +114,8 @@ void makePlots::makeHistoCh0() {
 
 	if(quantity == "Voltage")
 	    hCh0->SetXTitle("Voltage (V)");
-	else if(quantity == "Energy")
+	else if(quantity == "Energy" ||
+		quantity == "Shifting")
 	    hCh0->SetXTitle("Energy (MeV)");
 
 	hCh0->SetYTitle("Entries");

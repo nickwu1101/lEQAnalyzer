@@ -133,7 +133,7 @@ void main_test() {
     TimeAnalysis *testObj = new TimeAnalysis();
     GraphPrinter *testObj2 = new GraphPrinter();
     testObj->test();
-    testObj2->test();
+    //testObj2->test();
 }
 
 void main_makePlots() {

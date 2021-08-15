@@ -216,6 +216,13 @@ void PeakFitter::fitBkg() {
 
 
 
+void PeakFitter::setQuantity(string inputStr) {
+    quantity = inputStr;
+    setInternalPara();
+}
+
+
+
 void PeakFitter::setPeakNumb(int input) {
     if(peakType == "expo") {
 	peakNumb = 0;
@@ -248,108 +255,7 @@ void PeakFitter::setPeakNumb(int input) {
 
 void PeakFitter::setPeakType(string inputStr) {
     peakType = inputStr;
-
-    if(peakType == "K40" || peakType == "peak16") {
-	folderPath = "plotting/fittingHualien/peak16";
-	setPeakNumb(1);
-
-	/* For Voltage (V)
-	setRange(1.4, 1.8);
-	setCPow(10., 5., 50.);
-	setExpo(-3., -5., 0.);
-	setCGauss(1000., 0., 100000000.);
-	setMean(1.55, 1.5, 1.65);
-	setSTD(0.01, 0., 0.1);
-	*/
-
-	// For Energy (MeV)
-	setRange(1.3, 1.6);
-	setCPow(10., 5., 50.);
-	setExpo(-3., -5., 0.);
-	setCGauss(1000., 0., 100000000.);
-	setMean(1.45, 1.4, 1.5);
-	setSTD(0.01, 0., 0.1);
-    } else if(peakType == "Rn222" || peakType == "peak06") {
-	folderPath = "plotting/fittingHualien/peak06";
-	setPeakNumb(1);
-
-	/* For Voltage (V)
-	setRange(0.6, 0.84);
-	setCPow(10., -100., 100.);
-	setExpo(-3., -5., 0.);
-	setCGauss(1000., 0., 100000000., 0);
-	setMean(0.725, 0.7, 0.75, 0);
-	setSTD(0.01, 0., 0.1, 0);
-	*/
-
-	// For Energy (MeV)
-	setRange(0.5, 0.7);
-	setCPow(10., -100., 100.);
-	setExpo(-3., -5., 0.);
-	setCGauss(1000., 0., 100000000., 0);
-	setMean(0.6, 0.55, 0.65, 0);
-	setSTD(0.01, 0., 0.1, 0);
-
-	if(peakNumb >= 2) {
-	    /* For Voltage (V)
-	    setCGauss(1000., 0., 100000000., 1);
-	    setMean(0.58, 0.55, 0.6, 1);
-	    setSTD(0.01, 0., 0.1, 1);
-	    */
-
-	    // For Energy (MeV)
-	    setCGauss(1000., 0., 100000000., 1);
-	    setMean(0.48, 0.45, 0.5, 1);
-	    setSTD(0.01, 0., 0.1, 1);
-	}
-    } else if(peakType == "peak04") {
-	folderPath = "plotting/fittingHualien/peak04";
-	setPeakNumb(1);
-
-	/* For Voltage (V)
-	setRange(0.35, 0.45);
-	setCPow(10., -100., 100.);
-	setExpo(-3., -5., 0.);
-	setCGauss(1000., 0., 100000000., 0);
-	setMean(0.4, 0.38, 0.41, 0);
-	setSTD(0.01, 0., 0.1, 0);
-	*/
-
-	// For Energy (MeV)
-	setRange(0.25, 0.35);
-	setCPow(10., -100., 100.);
-	setExpo(-3., -5., 0.);
-	setCGauss(1000., 0., 100000000.);
-	setMean(0.29, 0.275, 0.3);
-	setSTD(0.01, 0., 0.1);
-    } else if(peakType == "peak24") {
-	folderPath = "plotting/fittingHualien/peak24";
-	setPeakNumb(1);
-
-	/* For Voltage (V)
-	setRange(2.3, 2.55);
-	setCPow(10., -100., 100.);
-	setExpo(-3., -5., 0.);
-	setCGauss(1000., 0., 100000000., 0);
-	setMean(2.4, 2.35, 2.45, 0);
-	setSTD(0.01, 0., 0.1, 0);
-	*/
-
-	// For Energy (MeV)
-	setRange(2.15, 2.45);
-	setCPow(10., -100., 100.);
-	setExpo(-3., -100., 0.);
-	setCGauss(1000., 0., 100000000.);
-	setMean(2.3, 2.25, 2.35);
-	setSTD(0.01, 0., 0.1);
-    } else if(peakType == "expo") {
-	folderPath = "plotting/fittingHualien";
-	setPeakNumb(0);
-
-	setRange(0.4, 0.9);
-	setCPow(10., -100., 100.);
-	setExpo(-3., -1000., 0.);
-    }
+    setInternalPara();
 }
 
 
@@ -488,5 +394,135 @@ double PeakFitter::getAssignedError(string inputStr, int i) {
     } else {
 	cout << "Unkonwn Term!!!" << endl;
 	return 0;
+    }
+}
+
+
+
+void PeakFitter::setInternalPara() {
+    if(peakType == "K40" || peakType == "peak16") {
+	folderPath = "plotting/fitting2/peak16";
+	setPeakNumb(1);
+
+	if(quantity == "Voltage") {
+	    setRange(1.4, 1.8);
+	    setCPow(10., 5., 50.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000.);
+	    setMean(1.55, 1.5, 1.65);
+	    setSTD(0.01, 0., 0.1);
+	} else if(quantity == "Energy") {
+	    setRange(1.3, 1.6);
+	    setCPow(10., 5., 50.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000.);
+	    setMean(1.45, 1.4, 1.5);
+	    setSTD(0.01, 0., 0.1);
+	} else if(quantity == "Shifting") {
+	    setRange(1.35, 1.55);
+	    setCPow(10., 5., 50.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000.);
+	    setMean(1.45, .1425, 1.5);
+	    setSTD(0.01, 0., 0.1);
+	}
+    } else if(peakType == "Rn222" || peakType == "peak06") {
+	folderPath = "plotting/fitting2/peak06";
+	setPeakNumb(1);
+
+	if(quantity == "Voltage") {
+	    setRange(0.6, 0.84);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000., 0);
+	    setMean(0.725, 0.7, 0.75, 0);
+	    setSTD(0.01, 0., 0.1, 0);
+	} else if(quantity == "Energy") {
+	    setRange(0.5, 0.7);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000., 0);
+	    setMean(0.6, 0.55, 0.65, 0);
+	    setSTD(0.01, 0., 0.1, 0);
+	} else if(quantity == "Shifting") {
+	    setRange(0.6, 0.75);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000., 0);
+	    setMean(0.65, 0.625, 0.675, 0);
+	    setSTD(0.01, 0., 0.1, 0);
+	}
+
+	if(peakNumb >= 2) {
+	    if(quantity == "Voltage") {
+		setCGauss(1000., 0., 100000000., 1);
+		setMean(0.58, 0.55, 0.6, 1);
+		setSTD(0.01, 0., 0.1, 1);
+	    } else if(quantity == "Energy") {
+		setCGauss(1000., 0., 100000000., 1);
+		setMean(0.48, 0.45, 0.5, 1);
+		setSTD(0.01, 0., 0.1, 1);
+	    } else if(quantity == "Shifting") {
+	    }
+	}
+    } else if(peakType == "peak04") {
+	folderPath = "plotting/fitting2/peak04";
+	setPeakNumb(1);
+
+	if(quantity == "Voltage") {
+	    setRange(0.35, 0.45);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000., 0);
+	    setMean(0.4, 0.38, 0.41, 0);
+	    setSTD(0.01, 0., 0.1, 0);
+	} else if(quantity == "Energy") {
+	    setRange(0.25, 0.35);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000.);
+	    setMean(0.29, 0.275, 0.3);
+	    setSTD(0.01, 0., 0.1);
+	} else if(quantity == "Shifting") {
+	    setRange(0.325, 0.375);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000., 0);
+	    setMean(0.35, 0.34, 0.36, 0);
+	    setSTD(0.01, 0., 0.1, 0);
+	}
+    } else if(peakType == "peak24") {
+	folderPath = "plotting/fitting2/peak24";
+	setPeakNumb(1);
+
+	if(quantity == "Voltage") {
+	    setRange(2.3, 2.55);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -5., 0.);
+	    setCGauss(1000., 0., 100000000., 0);
+	    setMean(2.4, 2.35, 2.45, 0);
+	    setSTD(0.01, 0., 0.1, 0);
+	} else if(quantity == "Energy") {
+	    setRange(2.15, 2.45);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -100., 0.);
+	    setCGauss(1000., 0., 100000000.);
+	    setMean(2.3, 2.25, 2.35);
+	    setSTD(0.01, 0., 0.1);
+	} else if(quantity == "Shifting") {
+	    setRange(2.15, 2.35);
+	    setCPow(10., -100., 100.);
+	    setExpo(-3., -100., 0.);
+	    setCGauss(1000., 0., 100000000.);
+	    setMean(2.25, 2.2, 2.3);
+	    setSTD(0.01, 0., 0.1);
+	}
+    } else if(peakType == "expo") {
+	folderPath = "plotting/fitting2";
+	setPeakNumb(0);
+
+	setRange(0.4, 0.9);
+	setCPow(10., -100., 100.);
+	setExpo(-3., -1000., 0.);
     }
 }

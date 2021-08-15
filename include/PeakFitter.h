@@ -21,6 +21,7 @@ public:
     void   test();
 
     void   setHistogram(TH1D* inputH)     { histogram = inputH; };
+    void   setQuantity(string);
     void   setPeakNumb(int);
     void   setPeakType(string);
     void   setFitterStr(string inputStr)  { fitterStr = inputStr; };
@@ -89,6 +90,7 @@ private:
     TH1D*  histogram;
 
     string fittingType = "Minuit";
+    string quantity;
     int    peakNumb;
     string peakType;
     string fitterStr;
@@ -125,6 +127,8 @@ private:
     vector<double> lowerSTD;
 
     vector<double> ratioSM;
+
+    void setInternalPara();
 };
 
 #endif
