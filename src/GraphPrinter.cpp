@@ -17,6 +17,7 @@
 
 GraphPrinter::GraphPrinter() {
     handledTU = "P2H";
+    quantity = "Shifting";
 }
 
 
@@ -31,21 +32,21 @@ void GraphPrinter::execute() {
 
 
 void GraphPrinter::test() {
-    //printFittingGraph();
-    //printNormFittingGraph();
-    //printTempCorrectFittingGraph();
-    //printCompareCorrectionFittingGraph();
-    //printFittingTempCorrelation();
+    printFittingGraph();
+    printNormFittingGraph();
+    printTempCorrectFittingGraph();
+    printCompareCorrectionFittingGraph();
+    printFittingTempCorrelation();
 
     handledTU = "P2H";
-    //printCountingGraph();
-    //printNormCountingGraph();
-    //printTempCorrectCountingGraph();
-    //printCompareCorrectionCountingGraph();
-    //printCountingTempCorrelation();
+    printCountingGraph();
+    printNormCountingGraph();
+    printTempCorrectCountingGraph();
+    printCompareCorrectionCountingGraph();
+    printCountingTempCorrelation();
 
-    printOverlapExpAndSimulation();
-    printOverlapExpAndBkg();
+    //printOverlapExpAndSimulation();
+    //printOverlapExpAndBkg();
 }
 
 
@@ -54,9 +55,12 @@ void GraphPrinter::printFittingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
     TFile* f = nullptr;
-    if(handledTU == "P2H")
-	f = new TFile("ready/fitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/fitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	f = new TFile("ready/fitResult6.root", "READ");
 
     TTree* fitTree;
@@ -98,9 +102,12 @@ void GraphPrinter::printFittingGraph() {
     fitTree->SetBranchAddress("cge0406", &cge0406);
 
     TFile* foutlier = nullptr;
-    if(handledTU == "P2H")
-	foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
 
     TTree* outlierTree;
@@ -213,8 +220,10 @@ void GraphPrinter::printFittingGraph() {
     foutlier->Close();
     delete foutlier;
 
-    f->Close();
-    delete f;
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
 
     delete cGraph;
 }
@@ -224,7 +233,12 @@ void GraphPrinter::printFittingGraph() {
 void GraphPrinter::printCountingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
-    TFile* f = new TFile("ready/fluctResult.root", "READ");
+    TFile* f = nullptr;
+    if(quantity == "Energy")
+	f = new TFile("ready/fluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	f = new TFile("ready/fluctResultS.root", "READ");
+
     TTree* countTree;
     int entryNo;
     int year;
@@ -263,7 +277,12 @@ void GraphPrinter::printCountingGraph() {
     countTree->SetBranchAddress("countse16", &countse16);
     countTree->SetBranchAddress("countse0406", &countse0406);
 
-    TFile* foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+    TFile* foutlier = nullptr;
+    if(quantity == "Energy")
+	foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
+
     TTree* outlierTree;
     int entryNoOutlier;
     bool isoutlier04;
@@ -374,8 +393,10 @@ void GraphPrinter::printCountingGraph() {
     foutlier->Close();
     delete foutlier;
 
-    f->Close();
-    delete f;
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
 
     delete cGraph;
 }
@@ -387,9 +408,12 @@ void GraphPrinter::printFittingTempCorrelation() {
     TempHumi* th = new TempHumi();
 
     TFile* f = nullptr;
-    if(handledTU == "P2H")
-	f = new TFile("ready/fitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/fitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	f = new TFile("ready/fitResult6.root", "READ");
 
     TTree* fitTree;
@@ -481,7 +505,12 @@ void GraphPrinter::printCountingTempCorrelation() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
     TempHumi* th = new TempHumi();
 
-    TFile* f = new TFile("ready/fluctResult.root", "READ");
+    TFile* f = nullptr;
+    if(quantity == "Energy")
+	f = new TFile("ready/fluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	f = new TFile("ready/fluctResultS.root", "READ");
+
     TTree* countTree;
     int entryNo;
     int year;
@@ -564,6 +593,11 @@ void GraphPrinter::printCountingTempCorrelation() {
     delete ge06;
     delete ge04;
 
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
+
     delete th;
     delete cGraph;
 }
@@ -574,9 +608,12 @@ void GraphPrinter::printTempCorrectFittingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
     TFile* f = nullptr;
-    if(handledTU == "P2H")
-	f = new TFile("ready/TempCorrectFitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/TempCorrectFitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/TempCorrectFitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	f = new TFile("ready/TempCorrectFitResult6.root", "READ");
 
     TTree* fitTree;
@@ -618,9 +655,12 @@ void GraphPrinter::printTempCorrectFittingGraph() {
     fitTree->SetBranchAddress("cge0406", &cge0406);
 
     TFile* foutlier = nullptr;
-    if(handledTU == "P2H")
-	foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
 
     TTree* outlierTree;
@@ -748,7 +788,12 @@ void GraphPrinter::printTempCorrectFittingGraph() {
 void GraphPrinter::printTempCorrectCountingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
-    TFile* f = new TFile("ready/TempCorrectFluctResult.root", "READ");
+    TFile* f = nullptr;
+    if(quantity == "Energy")
+	f = new TFile("ready/TempCorrectFluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	f = new TFile("ready/TempCorrectFluctResultS.root", "READ");
+
     TTree* countTree;
     int entryNo;
     int year;
@@ -787,7 +832,12 @@ void GraphPrinter::printTempCorrectCountingGraph() {
     countTree->SetBranchAddress("countse16", &countse16);
     countTree->SetBranchAddress("countse0406", &countse0406);
 
-    TFile* foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+    TFile* foutlier = nullptr;
+    if(quantity == "Energy")
+	foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
+
     TTree* outlierTree;
     int entryNoOutlier;
     bool isoutlier04;
@@ -895,11 +945,15 @@ void GraphPrinter::printTempCorrectCountingGraph() {
     delete ge06;
     delete ge04;
 
-    foutlier->Close();
-    delete foutlier;
+    if(foutlier != nullptr) {
+	foutlier->Close();
+	delete foutlier;
+    }
 
-    f->Close();
-    delete f;
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
 
     delete cGraph;
 }
@@ -910,9 +964,12 @@ void GraphPrinter::printNormFittingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
     TFile* f = nullptr;
-    if(handledTU == "P2H")
-	f = new TFile("ready/NormalizedFitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/NormalizedFitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	f = new TFile("ready/NormalizedFitResult6.root", "READ");
 
     TTree* fitTree;
@@ -1053,8 +1110,10 @@ void GraphPrinter::printNormFittingGraph() {
     delete ge06;
     delete ge04;
 
-    f->Close();
-    delete f;
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
 
     delete cGraph;
 }
@@ -1064,7 +1123,12 @@ void GraphPrinter::printNormFittingGraph() {
 void GraphPrinter::printNormCountingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
-    TFile* f = new TFile("ready/NormalizedFluctResult.root", "READ");
+    TFile* f = nullptr;
+    if(quantity == "Energy")
+	f = new TFile("ready/NormalizedFluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	f = new TFile("ready/NormalizedFluctResultS.root", "READ");
+
     TTree* countTree;
     int entryNo;
     int year;
@@ -1203,8 +1267,10 @@ void GraphPrinter::printNormCountingGraph() {
     delete ge06;
     delete ge04;
 
-    f->Close();
-    delete f;
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
 
     delete cGraph;
 }
@@ -1216,9 +1282,12 @@ void GraphPrinter::printCompareCorrectionFittingGraph() {
     TempHumi* th = new TempHumi();
 
     TFile* fraw = nullptr;
-    if(handledTU == "P2H")
-	fraw = new TFile("ready/fitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    fraw = new TFile("ready/fitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    fraw = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	fraw = new TFile("ready/fitResult6.root", "READ");
 
     TTree* rawTree;
@@ -1260,9 +1329,12 @@ void GraphPrinter::printCompareCorrectionFittingGraph() {
     rawTree->SetBranchAddress("cge0406", &rawe0406);
 
     TFile* fcor = nullptr;
-    if(handledTU == "P2H")
-	fcor = new TFile("ready/TempCorrectFitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    fcor = new TFile("ready/TempCorrectFitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    fcor = new TFile("ready/TempCorrectFitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	fcor = new TFile("ready/TempCorrectFitResult6.root", "READ");
 
     TTree* corTree;
@@ -1304,9 +1376,12 @@ void GraphPrinter::printCompareCorrectionFittingGraph() {
     corTree->SetBranchAddress("cge0406", &core0406);
 
     TFile* foutlier = nullptr;
-    if(handledTU == "P2H")
-	foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
 
     TTree* outlierTree;
@@ -1419,7 +1494,12 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
     TempHumi* th = new TempHumi();
 
-    TFile* fraw = new TFile("ready/fluctResult.root", "READ");
+    TFile* fraw = nullptr;
+    if(quantity == "Energy")
+	fraw = new TFile("ready/fluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	fraw = new TFile("ready/fluctResultS.root", "READ");
+
     TTree* rawTree;
     int rentryNo;
     int ryear;
@@ -1458,7 +1538,12 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     rawTree->SetBranchAddress("countse16", &rawe16);
     rawTree->SetBranchAddress("countse0406", &rawe0406);
 
-    TFile* fcor = new TFile("ready/TempCorrectFluctResult.root", "READ");
+    TFile* fcor = nullptr;
+    if(quantity == "Energy")
+	fcor = new TFile("ready/TempCorrectFluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	fcor = new TFile("ready/TempCorrectFluctResultS.root", "READ");
+
     TTree* corTree;
     int centryNo;
     int cyear;
@@ -1497,7 +1582,11 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     corTree->SetBranchAddress("countse16", &core16);
     corTree->SetBranchAddress("countse0406", &core0406);
 
-    TFile* foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+    TFile* foutlier = nullptr;
+    if(quantity == "Energy")
+	foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
 
     TTree* outlierTree;
     int entryNoOutlier;
@@ -1578,14 +1667,20 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     delete geRaw06;
     delete geRaw04;
 
-    foutlier->Close();
-    delete foutlier;
+    if(foutlier != nullptr) {
+	foutlier->Close();
+	delete foutlier;
+    }
 
-    fcor->Close();
-    delete fcor;
+    if(fcor != nullptr) {
+	fcor->Close();
+	delete fcor;
+    }
 
-    fraw->Close();
-    delete fraw;
+    if(fraw != nullptr) {
+	fraw->Close();
+	delete fraw;
+    }
 
     delete th;
     delete cGraph;
@@ -1701,7 +1796,12 @@ void GraphPrinter::printCorrelationWithTemp(TGraph* inputG, string term, string 
     pt->Draw();
 
     cG->Update();
-    string outputfolder = "plotting/fitting2";
+    string outputfolder = "";
+    if(quantity == "Energy" ||
+       quantity == "Voltage")
+	outputfolder = "plotting/fitting2";
+    else if(quantity == "Shifting")
+	outputfolder = "plotting/fittingShifting";
 
     string outputfilename = "";
     if(term == "cGauss")
@@ -1755,7 +1855,13 @@ void GraphPrinter::printCompareMultiG(TGraph* graw, TGraph* gcor, string term, s
     lg->Draw();    
 
     cMG->Update();
-    string outputfolder = "plotting/fitting2";
+    string outputfolder = "";
+    if(quantity == "Energy" ||
+       quantity == "Voltage")
+	outputfolder = "plotting/fitting2";
+    else if(quantity == "Shifting")
+	outputfolder = "plotting/fittingShifting";
+
     string outputfilename = "";
 
     if(term == "cGauss") {
@@ -1834,7 +1940,13 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
     lg->Draw();
 
     cMG->Update();
-    string outputfolder = "plotting/fitting2";
+    string outputfolder = "";
+    if(quantity == "Energy" ||
+       quantity == "Voltage")
+	outputfolder = "plotting/fitting2";
+    else if(quantity == "Shifting")
+	outputfolder = "plotting/fittingShifting";
+
     string outputfilename = "";
 
     if(term == "cGauss") {
@@ -2061,28 +2173,53 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
     } else if(term == "counts") {
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
-		upper = 45000.;
-		lower = 20000.;
+		if(quantity == "Energy") {
+		    upper = 25000.;
+		    lower = 15000.;
+		} else if(quantity == "Shifting") {
+		    upper = 5000.;
+		    lower = 0.;
+		}
 	    }
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
-		upper = 52000.;
-		lower = 32000.;
+		if(quantity == "Energy") {
+		    upper = 40000.;
+		    lower = 30000.;
+		} else if(quantity == "Shifting") {
+		    upper = 52000.;
+		    lower = 36000.;
+		}
 	    }
 	} else if(ER == "peak16") {
 	    if(timeUnit == "P2H") {
-		upper = 24000.;
-		lower = 15000.;
+		if(quantity == "Energy") {
+		    upper = 20000.;
+		    lower = 12000.;
+		} else if(quantity == "Shifting") {
+		    upper = 21000.;
+		    lower = 14000.;
+		}
 	    }
 	} else if(ER == "0to25") {
 	    if(timeUnit == "P2H") {
-		upper = 480000.;
-		lower = 400000.;
+		if(quantity == "Energy") {
+		    upper = 480000.;
+		    lower = 400000.;
+		} else if(quantity == "Shifting") {
+		    upper = 480000.;
+		    lower = 320000.;
+		}
 	    }
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
-		upper = 97000.;
-		lower = 52000.;
+		if(quantity == "Energy") {
+		    upper = 65000.;
+		    lower = 55000.;
+		} else if(quantity == "Shifting") {
+		    upper = 85000.;
+		    lower = 54000.;
+		}
 	    }
 	}
     } else if(term == "normCGauss") {
@@ -2194,23 +2331,43 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
     } else if(term == "correctedCounts") {
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
-		upper = 40000.;
-		lower = 15000.;
+		if(quantity == "Energy") {
+		    upper = 40000.;
+		    lower = 15000.;
+		} else if(quantity == "Shifting") {
+		    upper = 5000.;
+		    lower = 0.;
+		}
 	    }
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
-		upper = 100000.;
-		lower = 70000.;
+		if(quantity == "Energy") {
+		    upper = 100000.;
+		    lower = 70000.;
+		} else if(quantity == "Shifting") {
+		    upper = 52000.;
+		    lower = 36000.;
+		}
 	    }
 	} else if(ER == "peak16") {
 	    if(timeUnit == "P2H") {
-		upper = 27000.;
-		lower = 0.;
+		if(quantity == "Energy") {
+		    upper = 27000.;
+		    lower = 0.;
+		} else if(quantity == "Shifting") {
+		    upper = 21000.;
+		    lower = 14000.;
+		}
 	    }
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
-		upper = 135000.;
-		lower = 100000.;
+		if(quantity == "Energy") {
+		    upper = 135000.;
+		    lower = 100000.;
+		} else if(quantity == "Shifting") {
+		    upper = 85000.;
+		    lower = 54000.;
+		}
 	    }
 	}
     }

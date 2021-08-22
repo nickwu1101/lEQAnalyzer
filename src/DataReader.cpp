@@ -210,6 +210,53 @@ void DataReader::runFilterFilling(TH1D* inputH, int channel,
 				  double low, double up) {
     initialize();
 
+    TFile* fshift = nullptr;
+    if(quantity == "Shifting")
+	fshift = new TFile("ready/fitResultV.root", "READ");
+
+    double Pb214theo = 0.352;
+    double K40theo = 1.46;
+    double Pb214fit = 0.;
+    double K40fit = 0.;
+
+    if(fshift != nullptr) {
+	TTree* tree;
+	int year;
+	int month;
+	int day;
+	int hour;
+	int min;
+	double sec;
+
+	double meang04;
+	double meang16;
+
+	fshift->GetObject("dataFitting", tree);
+	tree->SetBranchAddress("year", &year);
+	tree->SetBranchAddress("month", &month);
+	tree->SetBranchAddress("day", &day);
+	tree->SetBranchAddress("hour", &hour);
+	tree->SetBranchAddress("minute", &min);
+	tree->SetBranchAddress("second", &sec);
+
+	tree->SetBranchAddress("meang04", &meang04);
+	tree->SetBranchAddress("meang16", &meang16);
+
+	Long64_t timeEntries = tree->GetEntries();
+	for(Long64_t entry = 0; entry < timeEntries; ++entry) {
+	    tree->GetEntry(entry);
+
+	    Calendar* entryDT = new Calendar(year, month, day, hour, min, sec);
+
+	    if(*entryDT == *startDateTime) {
+		Pb214fit = meang04;
+		K40fit = meang16;
+	    }
+
+	    delete entryDT;
+	}
+    }
+
     Long64_t nentries = fTree->GetEntries();
 
     for(Long64_t entry = 0; entry < nentries; ++entry) {
@@ -247,14 +294,25 @@ void DataReader::runFilterFilling(TH1D* inputH, int channel,
 		} else if(quantity == "Energy") {
 		    if(V2MeV(fillValue) <= up && V2MeV(fillValue) >= low)
 			inputH->Fill(V2MeV(fillValue));
+		} else if(quantity == "Shifting") {
+		    double slope = (K40theo - Pb214theo)/(K40fit - Pb214fit);
+		    fillValue = Pb214theo + slope*(fillValue - Pb214fit);
+
+		    if(fillValue <= up && fillValue >= low)
+			inputH->Fill(fillValue);
 		}
 	    } else if(*eventDateTime > *endDateTime) {
 		delete eventDateTime;
 		continue;
 	    }
-
-	    delete eventDateTime;
 	}
+
+	delete eventDateTime;
+    }
+
+    if(fshift != nullptr) {
+	fshift->Close();
+	delete fshift;
     }
 }
 

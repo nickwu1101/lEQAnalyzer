@@ -25,12 +25,12 @@ void TimeAnalysis::execute() {
 
 
 void TimeAnalysis::test() {
-    analyzeByFitting();
-    //analyzeByCounting();
+    //analyzeByFitting();
+    analyzeByCounting();
     //correctFittingAnaByTemp();
-    //correctCountingAnaByTemp();
+    correctCountingAnaByTemp();
     //normalizeFittingResult();
-    //normalizeCountingResult();
+    normalizeCountingResult();
 
     //fitOnTotalTime();
 }
@@ -356,7 +356,12 @@ void TimeAnalysis::analyzeByFitting () {
 
 
 void TimeAnalysis::analyzeByCounting() {
-    TFile* foutput = new TFile("ready/fluctResult.root", "RECREATE");
+    TFile* foutput = nullptr;
+    if(quantity == "Energy")
+	foutput = new TFile("ready/fluctResult.root", "RECREATE");
+    else if(quantity == "Shifting")
+	foutput = new TFile("ready/fluctResultS.root", "RECREATE");
+
     int entryNo;
     int outputyr;
     int outputmon;
@@ -424,9 +429,12 @@ void TimeAnalysis::analyzeByCounting() {
 	string thisTU = timeUnitList[iTU];
 	if(thisTU == "PT")
 	    continue;
-	else if(thisTU == "P2H")
-	    file = new TFile("ready/0418to0607aHistP02hD.root");
-	else
+	else if(thisTU == "P2H") {
+	    if(quantity == "Energy")
+		file = new TFile("ready/0418to0607aHistP02h.root");
+	    else if(quantity == "Shifting")
+		file = new TFile("ready/0418to0607aHistP02hS.root");
+	} else
 	    continue;
 
 	for(unsigned int iER = 0; iER < energyRange.size(); iER++) {
@@ -517,9 +525,12 @@ void TimeAnalysis::analyzeByCounting() {
 
 void TimeAnalysis::normalizeFittingResult() {
     TFile* finput = nullptr;
-    if(handledTU == "P2H")
-	finput = new TFile("ready/TempCorrectFitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    finput = new TFile("ready/TempCorrectFitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    finput = new TFile("ready/TempCorrectFitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	finput = new TFile("ready/TempCorrectFitResult6.root", "READ");
 
     TTree* inTree;
@@ -561,9 +572,12 @@ void TimeAnalysis::normalizeFittingResult() {
     inTree->SetBranchAddress("cge0406", &cge0406);
 
     TFile* foutput = nullptr;
-    if(handledTU == "P2H")
-	foutput = new TFile("ready/NormalizedFitResult.root", "RECREATE");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutput = new TFile("ready/NormalizedFitResult.root", "RECREATE");
+	else if(quantity == "Shifting")
+	    foutput = new TFile("ready/NormalizedFitResultS.root", "RECREATE");
+    } else if(handledTU == "P6H")
 	foutput = new TFile("ready/NormalizedFitResult6.root", "RECREATE");
 
     int outEntryNo;
@@ -779,8 +793,13 @@ void TimeAnalysis::normalizeFittingResult() {
 
 
 void TimeAnalysis::normalizeCountingResult() {
-    //TFile* finput = new TFile("ready/TempCorrectFluctResult.root", "READ");
-    TFile* finput = new TFile("ready/fluctResult.root", "READ");
+    TFile* finput = nullptr;
+    if(quantity == "Energy") {
+	//finput = new TFile("ready/TempCorrectFluctResult.root", "READ");
+	finput = new TFile("ready/fluctResult.root", "READ");
+    } else if(quantity == "Shifting")
+	finput = new TFile("ready/TempCorrectFluctResultS.root", "READ");
+
     TTree* inTree;
     int entryNo;
     int year;
@@ -823,7 +842,12 @@ void TimeAnalysis::normalizeCountingResult() {
     inTree->SetBranchAddress("countse0to25", &countse0to25);
     inTree->SetBranchAddress("countse0406", &countse0406);
 
-    TFile* foutput = new TFile("ready/NormalizedFluctResult.root", "RECREATE");
+    TFile* foutput = nullptr;
+    if(quantity == "Energy")
+	foutput = new TFile("ready/NormalizedFluctResult.root", "RECREATE");
+    else if(quantity == "Shifting")
+	foutput = new TFile("ready/NormalizedFluctResultS.root", "RECREATE");
+
     int outEntryNo;
     int outyear;
     int outmonth;
@@ -1062,9 +1086,12 @@ void TimeAnalysis::normalizeCountingResult() {
 void TimeAnalysis::correctFittingAnaByTemp() {
     TempHumi* th = new TempHumi();
     TFile* finput = nullptr;
-    if(handledTU == "P2H")
-	finput = new TFile("ready/fitResult.root", "READ");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    finput = new TFile("ready/fitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    finput = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P6H")
 	finput = new TFile("ready/fitResult6.root", "READ");
 
     TTree* inTree;
@@ -1106,9 +1133,12 @@ void TimeAnalysis::correctFittingAnaByTemp() {
     inTree->SetBranchAddress("cge0406", &cge0406);
 
     TFile* foutput = nullptr;
-    if(handledTU == "P2H")
-	foutput = new TFile("ready/TempCorrectFitResult.root", "RECREATE");
-    else if(handledTU == "P6H")
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutput = new TFile("ready/TempCorrectFitResult.root", "RECREATE");
+	else if(quantity == "Shifting")
+	    foutput = new TFile("ready/TempCorrectFitResultS.root", "RECREATE");
+    } else if(handledTU == "P6H")
 	foutput = new TFile("ready/TempCorrectFitResult6.root", "RECREATE");
 
     int outEntryNo;
@@ -1204,7 +1234,13 @@ void TimeAnalysis::correctFittingAnaByTemp() {
 
 void TimeAnalysis::correctCountingAnaByTemp() {
     TempHumi* th = new TempHumi();
-    TFile* finput = new TFile("ready/fluctResult.root", "READ");
+    TFile* finput = nullptr;
+
+    if(quantity == "Energy")
+	finput = new TFile("ready/fluctResult.root", "READ");
+    else if(quantity == "Shifting")
+	finput = new TFile("ready/fluctResultS.root", "READ");
+
     TTree* inTree;
     int entryNo;
     int year;
@@ -1247,7 +1283,12 @@ void TimeAnalysis::correctCountingAnaByTemp() {
     inTree->SetBranchAddress("countse0to25", &countse0to25);
     inTree->SetBranchAddress("countse0406", &countse0406);
 
-    TFile* foutput = new TFile("ready/TempCorrectFluctResult.root", "RECREATE");
+    TFile* foutput = nullptr;
+    if(quantity == "Energy")
+	foutput = new TFile("ready/TempCorrectFluctResult.root", "RECREATE");
+    else if(quantity == "Shifting")
+	foutput = new TFile("ready/TempCorrectFluctResultS.root", "RECREATE");
+
     int outEntryNo;
     int outyear;
     int outmonth;
@@ -1423,37 +1464,82 @@ double TimeAnalysis::calErrAfterCorrect(string method, string ER, string timeUni
     double p1Err = 0.;
     if(method == "fitting") {
 	if(ER == "peak04") {
-	    p1 = 0.835191;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = 0.835191;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 0.336220;
+		p1Err = 0.;
+	    }
 	} else if(ER == "peak06") {
-	    p1 = -1.026552;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = -1.026552;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 1.292246;
+		p1Err = 0.;
+	    }
 	} else if(ER == "peak16") {
-	    p1 = 0.804824;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = 0.804824;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 0.620086;
+		p1Err = 0.;
+	    }
 	} else if(ER == "peak0406") {
-	    p1 = -0.138124;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = -0.138124;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 1.460028;
+		p1Err = 0.;
+	    }
 	}
     } else if(method == "countingU") {
 	if(timeUnit == "P2H")
 	    p1 = 5223.066190;
     } else if(method == "counting") {
 	if(ER == "peak04") {
-	    p1 = 402.567788;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = 587.261030;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 313.566845;
+		p1Err = 0.;
+	    }
 	} else if(ER == "peak06") {
-	    p1 = 229.276178;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = -521.677461;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 377.384287;
+		p1Err = 0.;
+	    }
 	} else if(ER == "peak16") {
-	    p1 = -205.508207;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = -776.343868;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 103.735812;
+		p1Err = 0.;
+	    }
 	} else if(ER == "0to25") {
-	    p1 = 5223.066190;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = 5404.561710;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 5205.479969;
+		p1Err = 0.;
+	    }
 	} else if(ER == "peak0406") {
-	    p1 = 640.151121;
-	    p1Err = 0.;
+	    if(quantity == "Energy") {
+		p1 = 63.722873;
+		p1Err = 0.;
+	    } else if(quantity == "Shifting") {
+		p1 = 1137.601419;
+		p1Err = 0.;
+	    }
 	}
     }
 

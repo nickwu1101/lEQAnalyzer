@@ -36,6 +36,7 @@ public:
 private:
     vector<double> vd;
     string handledTU;
+    string quantity;
     void   printCorrelationWithTemp(TGraph*, string, string, string);
     void   printCompareMultiG(TGraph*, TGraph*, string, string, string);
     void   printWithErrorBand(TGraph*, double, double, string, string, string);

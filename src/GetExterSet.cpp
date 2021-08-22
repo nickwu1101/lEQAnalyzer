@@ -18,7 +18,8 @@ void GetExterSet::loadTermList(string termFileStr) {
 
     string line;
     while(termListFile.is_open()) {
-	if(termListFile.eof()) break;
+	if(termListFile.eof())
+	    break;
 
 	getline(termListFile, line);
 	if(line.size() != 0 && line.find(":") != string::npos) {
@@ -50,9 +51,8 @@ string GetExterSet::giveStrVar(string termRead) {
 
 int GetExterSet::giveIntVar(string termRead) {
     for(unsigned int i = 0; i < termList.size(); i++) {
-	if(termRead == termList[i].termName) {
+	if(termRead == termList[i].termName)
 	    return atoi(termList[i].valueStr.c_str());
-	}
     }
 
     cout << "Cannot find the parameter of " << termRead << "!!!" << endl;
@@ -63,9 +63,8 @@ int GetExterSet::giveIntVar(string termRead) {
 
 double GetExterSet::giveDoubleVar(string termRead) {
     for(unsigned int i = 0; i < termList.size(); i++) {
-	if(termRead == termList[i].termName) {
+	if(termRead == termList[i].termName)
 	    return atof(termList[i].valueStr.c_str());
-	}
     }
 
     cout << "Cannot find the parameter of " << termRead << "!!!" << endl;

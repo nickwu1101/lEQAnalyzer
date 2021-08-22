@@ -60,10 +60,11 @@ void makePlots::execute() {
     //energyRange = "peak06";
     //assignCutEnergyRange(energyRange, lower, upper);
     //collectWithFilter(energyRange, lower, upper);
-    //collectWithFilter("peak16", 1.5, 1.64);
-    //collectWithFilter("peak04", 0.385, 0.41);
+    //collectWithFilter("peak06", 0.6, 0.72);
+    //collectWithFilter("peak16", 1.42, 1.51);
+    collectWithFilter("peak04", 0.27, 0.29);
     //collectWithFilter("peak24", 2.35, 2.45);
-    //collectWithFilter("0to25", 0., 2.5);
+    //collectWithFilter("0to25", 0., 2.31);
 
     //collectWithDynamicFilter("peak16");
 
@@ -285,7 +286,8 @@ void makePlots::collectWithFilter(string filtingRegion,
 
 	if(quantity == "Voltage")
 	    hCh0->SetXTitle("Voltage (V)");
-	else if(quantity == "Energy")
+	else if(quantity == "Energy" ||
+		quantity == "Shifting")
 	    hCh0->SetXTitle("Energy (MeV)");
 
 	hCh0->SetYTitle("Entries");
