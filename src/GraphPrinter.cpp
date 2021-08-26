@@ -45,7 +45,7 @@ void GraphPrinter::test() {
     printCompareCorrectionCountingGraph();
     printCountingTempCorrelation();
 
-    //printOverlapExpAndSimulation();
+    printOverlapExpAndSimulation();
     //printOverlapExpAndBkg();
 }
 
@@ -322,7 +322,9 @@ void GraphPrinter::printCountingGraph() {
 	if(entryNo == entryNoOutlier) {
 	    TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
 
-	    if(!isoutlier16 && counts04 > 0.) {
+	    if(!isoutlier16 &&
+	       !isoutlier04 &&
+	       counts04 > 0.) {
 		ge04->SetPoint(ge04->GetN(), tdt->Convert(), counts04);
 		ge04->SetPointError(ge04->GetN() - 1, 0., countse04);
 		mean04 += counts04;
@@ -330,7 +332,9 @@ void GraphPrinter::printCountingGraph() {
 		ntimebin04++;
 	    }
 
-	    if(!isoutlier16 && counts06 > 0.) {
+	    if(!isoutlier16 &&
+	       !isoutlier06 &&
+	       counts06 > 0.) {
 		ge06->SetPoint(ge06->GetN(), tdt->Convert(), counts06);
 		ge06->SetPointError(ge06->GetN() - 1, 0., countse06);
 		mean06 += counts06;
@@ -346,7 +350,9 @@ void GraphPrinter::printCountingGraph() {
 		ntimebin16++;
 	    }
 
-	    if(!isoutlier16 && counts0406 > 0.) {
+	    if(!isoutlier16 &&
+	       !isoutlier0406 &&
+	       counts0406 > 70000.) {
 		ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), counts0406);
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., countse0406);
 		mean0406 += counts0406;
@@ -1199,7 +1205,7 @@ void GraphPrinter::printNormCountingGraph() {
     for(Long64_t entry = 0; entry < nentries; ++entry) {
 	countTree->GetEntry(entry);
 	TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
-	if(!isoutlier16) {
+	if(!isoutlier16 && !isoutlier04) {
 	    ge04->SetPoint(ge04->GetN(), tdt->Convert(), countsn04);
 	    ge04->SetPointError(ge04->GetN() - 1, 0, countsne04);
 
@@ -1208,7 +1214,7 @@ void GraphPrinter::printNormCountingGraph() {
 	    ntimebin04++;
 	}
 
-	if(!isoutlier16) {
+	if(!isoutlier16 && !isoutlier06) {
 	    ge06->SetPoint(ge06->GetN(), tdt->Convert(), countsn06);
 	    ge06->SetPointError(ge06->GetN() - 1, 0, countsne06);
 
@@ -1226,7 +1232,7 @@ void GraphPrinter::printNormCountingGraph() {
 	    ntimebin16++;
 	}
 
-	if(!isoutlier16) {
+	if(!isoutlier16 && !isoutlier0406) {
 	    ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), countsn0406);
 	    ge0406->SetPointError(ge0406->GetN() - 1, 0, countsne0406);
 
@@ -2177,8 +2183,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 25000.;
 		    lower = 15000.;
 		} else if(quantity == "Shifting") {
-		    upper = 5000.;
-		    lower = 0.;
+		    upper = 24000.;
+		    lower = 14000.;
 		}
 	    }
 	} else if(ER == "peak06") {
@@ -2187,8 +2193,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 40000.;
 		    lower = 30000.;
 		} else if(quantity == "Shifting") {
-		    upper = 52000.;
-		    lower = 36000.;
+		    upper = 54000.;
+		    lower = 44000.;
 		}
 	    }
 	} else if(ER == "peak16") {
@@ -2197,8 +2203,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 20000.;
 		    lower = 12000.;
 		} else if(quantity == "Shifting") {
-		    upper = 21000.;
-		    lower = 14000.;
+		    upper = 24000.;
+		    lower = 20000.;
 		}
 	    }
 	} else if(ER == "0to25") {
@@ -2208,7 +2214,7 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    lower = 400000.;
 		} else if(quantity == "Shifting") {
 		    upper = 480000.;
-		    lower = 320000.;
+		    lower = 400000.;
 		}
 	    }
 	} else if(ER == "peak0406") {
@@ -2217,8 +2223,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 65000.;
 		    lower = 55000.;
 		} else if(quantity == "Shifting") {
-		    upper = 85000.;
-		    lower = 54000.;
+		    upper = 80000.;
+		    lower = 60000.;
 		}
 	    }
 	}

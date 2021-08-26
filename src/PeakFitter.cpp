@@ -423,7 +423,7 @@ void PeakFitter::setInternalPara() {
 	    setCPow(10., 5., 50.);
 	    setExpo(-3., -5., 0.);
 	    setCGauss(1000., 0., 100000000.);
-	    setMean(1.45, .1425, 1.5);
+	    setMean(1.45, 1.4, 1.5);
 	    setSTD(0.01, 0., 0.1);
 	}
     } else if(peakType == "Rn222" || peakType == "peak06") {
@@ -449,7 +449,7 @@ void PeakFitter::setInternalPara() {
 	    setCPow(10., -100., 100.);
 	    setExpo(-3., -5., 0.);
 	    setCGauss(1000., 0., 100000000., 0);
-	    setMean(0.65, 0.625, 0.675, 0);
+	    setMean(0.65, 0.66, 0.7, 0);
 	    setSTD(0.01, 0., 0.1, 0);
 	}
 
@@ -484,11 +484,11 @@ void PeakFitter::setInternalPara() {
 	    setMean(0.29, 0.275, 0.3);
 	    setSTD(0.01, 0., 0.1);
 	} else if(quantity == "Shifting") {
-	    setRange(0.325, 0.375);
+	    setRange(0.34, 0.4);
 	    setCPow(10., -100., 100.);
 	    setExpo(-3., -5., 0.);
 	    setCGauss(1000., 0., 100000000., 0);
-	    setMean(0.35, 0.34, 0.36, 0);
+	    setMean(0.37, 0.36, 0.38, 0);
 	    setSTD(0.01, 0., 0.1, 0);
 	}
     } else if(peakType == "peak24") {

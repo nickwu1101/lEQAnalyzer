@@ -133,8 +133,9 @@ void DataReader::runFillingLoop(TH1D* inputH, int channel) {
 		else if(quantity == "Energy")
 		    inputH->Fill(V2MeV(fillValue));
 		else if(quantity == "Shifting") {
-		    double slope = (K40theo - Pb214theo)/(K40fit - Pb214fit);
-		    inputH->Fill(Pb214theo + slope*(fillValue - Pb214fit));
+		    //double slope = (K40theo - Pb214theo)/(K40fit - Pb214fit);
+		    double factor = K40theo/K40fit;
+		    inputH->Fill(factor*fillValue);
 		}
 	    }
 	} else if(*eventDateTime > *endDateTime) {
@@ -295,8 +296,9 @@ void DataReader::runFilterFilling(TH1D* inputH, int channel,
 		    if(V2MeV(fillValue) <= up && V2MeV(fillValue) >= low)
 			inputH->Fill(V2MeV(fillValue));
 		} else if(quantity == "Shifting") {
-		    double slope = (K40theo - Pb214theo)/(K40fit - Pb214fit);
-		    fillValue = Pb214theo + slope*(fillValue - Pb214fit);
+		    //double slope = (K40theo - Pb214theo)/(K40fit - Pb214fit);
+		    double factor = K40theo/K40fit;
+		    fillValue *= factor;
 
 		    if(fillValue <= up && fillValue >= low)
 			inputH->Fill(fillValue);

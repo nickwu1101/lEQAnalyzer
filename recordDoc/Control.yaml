@@ -1,5 +1,5 @@
 energy: MeV
-bin: 800, 256
+bin: 950, 256
 min: 0., 0.
 max: 5., 0.2
 Voltage threshold: -0.05
@@ -10,3 +10,4 @@ max channel 1 voltage: 1.
 Chi2 threshold: 0.05
 quantity: Shifting
 #bin of original energy is 867
+#bin of shifting is 950
