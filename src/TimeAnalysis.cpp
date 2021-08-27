@@ -25,11 +25,11 @@ void TimeAnalysis::execute() {
 
 
 void TimeAnalysis::test() {
-    analyzeByFitting();
+    //analyzeByFitting();
     analyzeByCounting();
-    correctFittingAnaByTemp();
+    //correctFittingAnaByTemp();
     correctCountingAnaByTemp();
-    normalizeFittingResult();
+    //normalizeFittingResult();
     normalizeCountingResult();
 
     //fitOnTotalTime();
@@ -1008,7 +1008,8 @@ void TimeAnalysis::normalizeCountingResult() {
 	    mapIsOutlier0to25[entry] = true;
 
 	if(counts0406 >= meancounts0406 - width*stdcounts0406 &&
-	   counts0406 <= meancounts0406 + width*stdcounts0406) {
+	   counts0406 <= meancounts0406 + width*stdcounts0406 &&
+	   counts0406 > 70000.) {
 	    meancounts0406n += counts0406;
 	    stdcounts0406n += counts0406*counts0406;
 	    mapIsOutlier0406[entry] = false;

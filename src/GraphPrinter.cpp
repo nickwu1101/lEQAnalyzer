@@ -32,11 +32,11 @@ void GraphPrinter::execute() {
 
 
 void GraphPrinter::test() {
-    printFittingGraph();
-    printNormFittingGraph();
-    printTempCorrectFittingGraph();
-    printCompareCorrectionFittingGraph();
-    printFittingTempCorrelation();
+    //printFittingGraph();
+    //printNormFittingGraph();
+    //printTempCorrectFittingGraph();
+    //printCompareCorrectionFittingGraph();
+    //printFittingTempCorrelation();
 
     handledTU = "P2H";
     printCountingGraph();
@@ -883,7 +883,7 @@ void GraphPrinter::printTempCorrectCountingGraph() {
 	if(entryNo == entryNoOutlier) {
 	    TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier04) {
 		ge04->SetPoint(ge04->GetN(), tdt->Convert(), counts04);
 		ge04->SetPointError(ge04->GetN() - 1, 0., countse04);
 		mean04 += counts04;
@@ -891,7 +891,7 @@ void GraphPrinter::printTempCorrectCountingGraph() {
 		ntimebin04++;
 	    }
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier06) {
 		ge06->SetPoint(ge06->GetN(), tdt->Convert(), counts06);
 		ge06->SetPointError(ge06->GetN() - 1, 0., countse06);
 		mean06 += counts06;
@@ -907,7 +907,7 @@ void GraphPrinter::printTempCorrectCountingGraph() {
 		ntimebin16++;
 	    }
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier0406) {
 		ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), counts0406);
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., countse0406);
 		mean0406 += counts0406;
@@ -2183,7 +2183,7 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 25000.;
 		    lower = 15000.;
 		} else if(quantity == "Shifting") {
-		    upper = 24000.;
+		    upper = 25000.;
 		    lower = 14000.;
 		}
 	    }
@@ -2341,8 +2341,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 40000.;
 		    lower = 15000.;
 		} else if(quantity == "Shifting") {
-		    upper = 5000.;
-		    lower = 0.;
+		    upper = 25000.;
+		    lower = 14000.;
 		}
 	    }
 	} else if(ER == "peak06") {
@@ -2351,8 +2351,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 100000.;
 		    lower = 70000.;
 		} else if(quantity == "Shifting") {
-		    upper = 52000.;
-		    lower = 36000.;
+		    upper = 54000.;
+		    lower = 44000.;
 		}
 	    }
 	} else if(ER == "peak16") {
@@ -2361,8 +2361,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 27000.;
 		    lower = 0.;
 		} else if(quantity == "Shifting") {
-		    upper = 21000.;
-		    lower = 14000.;
+		    upper = 24000.;
+		    lower = 20000.;
 		}
 	    }
 	} else if(ER == "peak0406") {
@@ -2371,8 +2371,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 135000.;
 		    lower = 100000.;
 		} else if(quantity == "Shifting") {
-		    upper = 85000.;
-		    lower = 54000.;
+		    upper = 80000.;
+		    lower = 60000.;
 		}
 	    }
 	}
