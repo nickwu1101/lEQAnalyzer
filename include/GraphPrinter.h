@@ -30,6 +30,8 @@ public:
     void   printCompareCorrectionFittingGraph();
     void   printCompareCorrectionCountingGraph();
 
+    void   printFittingMeanGraph();
+
     void   printOverlapExpAndSimulation();
     void   printOverlapExpAndBkg();
 

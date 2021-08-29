@@ -17,7 +17,7 @@
 
 GraphPrinter::GraphPrinter() {
     handledTU = "P2H";
-    quantity = "Shifting";
+    quantity = "Energy";
 }
 
 
@@ -32,11 +32,13 @@ void GraphPrinter::execute() {
 
 
 void GraphPrinter::test() {
-    //printFittingGraph();
-    //printNormFittingGraph();
-    //printTempCorrectFittingGraph();
-    //printCompareCorrectionFittingGraph();
-    //printFittingTempCorrelation();
+    printFittingGraph();
+    printNormFittingGraph();
+    printTempCorrectFittingGraph();
+    printCompareCorrectionFittingGraph();
+    printFittingTempCorrelation();
+
+    printFittingMeanGraph();
 
     handledTU = "P2H";
     printCountingGraph();
@@ -45,7 +47,7 @@ void GraphPrinter::test() {
     printCompareCorrectionCountingGraph();
     printCountingTempCorrelation();
 
-    printOverlapExpAndSimulation();
+    //printOverlapExpAndSimulation();
     //printOverlapExpAndBkg();
 }
 
@@ -149,7 +151,7 @@ void GraphPrinter::printFittingGraph() {
 	if(entryNo == entryNoOutlier) {
 	    TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier04) {
 		ge04->SetPoint(ge04->GetN(), tdt->Convert(), cg04);
 		ge04->SetPointError(ge04->GetN() - 1, 0., cge04);
 		mean04 += cg04;
@@ -157,7 +159,7 @@ void GraphPrinter::printFittingGraph() {
 		ntimebin04++;
 	    }
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier06 && cg06 < 150.) {
 		ge06->SetPoint(ge06->GetN(), tdt->Convert(), cg06);
 		ge06->SetPointError(ge06->GetN() - 1, 0., cge06);
 		mean06 += cg06;
@@ -173,7 +175,7 @@ void GraphPrinter::printFittingGraph() {
 		ntimebin16++;
 	    }
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier0406 && cg0406 < 150.) {
 		ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), cg0406);
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., cge0406);
 		mean0406 += cg0406;
@@ -181,7 +183,7 @@ void GraphPrinter::printFittingGraph() {
 		ntimebin0406++;
 	    }
 
-	delete tdt;
+	    delete tdt;
 	} else {
 	    cout << "Both entry numbers are not match!!!" << endl;
 	    exit(0);
@@ -315,6 +317,8 @@ void GraphPrinter::printCountingGraph() {
     int ntimebin16 = 0;
     int ntimebin0406 = 0;
 
+    bool condition0406 = true;
+
     Long64_t nentries = countTree->GetEntries();
     for(Long64_t entry = 0; entry < nentries; ++entry) {
 	countTree->GetEntry(entry);
@@ -350,9 +354,14 @@ void GraphPrinter::printCountingGraph() {
 		ntimebin16++;
 	    }
 
+	    if(quantity == "Energy")
+		condition0406 = true;
+	    else if(quantity == "Shifting")
+		condition0406 = counts0406 > 70000.;
+
 	    if(!isoutlier16 &&
 	       !isoutlier0406 &&
-	       counts0406 > 70000.) {
+	       condition0406) {
 		ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), counts0406);
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., countse0406);
 		mean0406 += counts0406;
@@ -708,7 +717,7 @@ void GraphPrinter::printTempCorrectFittingGraph() {
 	if(entryNo == entryNoOutlier) {
 	    TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier04) {
 		ge04->SetPoint(ge04->GetN(), tdt->Convert(), cg04);
 		ge04->SetPointError(ge04->GetN() - 1, 0., cge04);
 		mean04 += cg04;
@@ -716,7 +725,7 @@ void GraphPrinter::printTempCorrectFittingGraph() {
 		ntimebin04++;
 	    }
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier06) {
 		ge06->SetPoint(ge06->GetN(), tdt->Convert(), cg06);
 		ge06->SetPointError(ge06->GetN() - 1, 0., cge06);
 		mean06 += cg06;
@@ -732,7 +741,7 @@ void GraphPrinter::printTempCorrectFittingGraph() {
 		ntimebin16++;
 	    }
 
-	    if(!isoutlier16) {
+	    if(!isoutlier16 && !isoutlier0406) {
 		ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), cg0406);
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., cge0406);
 		mean0406 += cg0406;
@@ -1694,6 +1703,154 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
 
 
 
+void GraphPrinter::printFittingMeanGraph() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+
+    TFile* f = nullptr;
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/fitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P6H")
+	f = new TFile("ready/fitResult6.root", "READ");
+
+    TTree* fitTree;
+    int entryNo;
+    int year;
+    int month;
+    int day;
+    int hour;
+    int min;
+    double sec;
+
+    double meang04;
+    double meang06;
+    double meang16;
+
+    f->GetObject("dataFitting", fitTree);
+    fitTree->SetBranchAddress("entryNo", &entryNo);
+    fitTree->SetBranchAddress("year", &year);
+    fitTree->SetBranchAddress("month", &month);
+    fitTree->SetBranchAddress("day", &day);
+    fitTree->SetBranchAddress("hour", &hour);
+    fitTree->SetBranchAddress("minute", &min);
+    fitTree->SetBranchAddress("second", &sec);
+
+    fitTree->SetBranchAddress("meang04", &meang04);
+    fitTree->SetBranchAddress("meang06", &meang06);
+    fitTree->SetBranchAddress("meang16", &meang16);
+
+    TGraphErrors* ge04 = new TGraphErrors();
+    TGraphErrors* ge06 = new TGraphErrors();
+    TGraphErrors* ge16 = new TGraphErrors();
+
+    TGraphErrors* geFactor = new TGraphErrors();
+    TH1D* hFactor = new TH1D("hFactor", "Factor", 35, 0.99, 1.025); 
+
+    double m04 = 0.;
+    double m06 = 0.;
+    double m16 = 0.;
+    double std04 = 0.;
+    double std06 = 0.;
+    double std16 = 0.;
+    int ntimebin04 = 0;
+    int ntimebin06 = 0;
+    int ntimebin16 = 0;
+
+    double mFac = 0.;
+    double stdFac = 0.;
+    int ntimebinFac = 0;
+
+    Long64_t nentries = fitTree->GetEntries();
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	fitTree->GetEntry(entry);
+
+	TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
+
+	ge04->SetPoint(ge04->GetN(), tdt->Convert(), meang04);
+	ge04->SetPointError(ge04->GetN() - 1, 0., 0.);
+	m04 += meang04;
+	std04 += meang04*meang04;
+	ntimebin04++;
+
+	ge06->SetPoint(ge06->GetN(), tdt->Convert(), meang06);
+	ge06->SetPointError(ge06->GetN() - 1, 0., 0.);
+	m06 += meang06;
+	std06 += meang06*meang06;
+	ntimebin06++;
+
+	ge16->SetPoint(ge16->GetN(), tdt->Convert(), meang16);
+	ge16->SetPointError(ge16->GetN() - 1, 0., 0.);
+	m16 += meang16;
+	std16 += meang16*meang16;
+	ntimebin16++;
+
+	double inputFac = 1.46/meang16;
+	hFactor->Fill(inputFac);
+	geFactor->SetPoint(geFactor->GetN(), tdt->Convert(), inputFac);
+	geFactor->SetPointError(geFactor->GetN() - 1, 0., 0.);
+	mFac += inputFac;
+	stdFac += inputFac*inputFac;
+	ntimebinFac++;
+
+	delete tdt;
+    }
+
+    m04 /= ntimebin04;
+    m06 /= ntimebin06;
+    m16 /= ntimebin16;
+    mFac /= ntimebinFac;
+
+    std04 -= ntimebin04*m04*m04;
+    std06 -= ntimebin06*m06*m06;
+    std16 -= ntimebin16*m16*m16;
+    stdFac -= ntimebinFac*mFac*mFac;
+    std04 = TMath::Sqrt(std04/(ntimebin04 - 1));
+    std06 = TMath::Sqrt(std06/(ntimebin06 - 1));
+    std16 = TMath::Sqrt(std16/(ntimebin16 - 1));
+    stdFac = TMath::Sqrt(stdFac/(ntimebinFac - 1));
+
+    double err04 = std04/TMath::Sqrt(ntimebin04);
+    double err06 = std06/TMath::Sqrt(ntimebin06);
+    double err16 = std16/TMath::Sqrt(ntimebin16);
+    double errFac = stdFac/TMath::Sqrt(ntimebinFac);
+
+    printWithErrorBand(ge04, m04, err04, "mean", "peak04", handledTU);
+    printWithErrorBand(ge06, m06, err06, "mean", "peak06", handledTU);
+    printWithErrorBand(ge16, m16, err16, "mean", "peak16", handledTU);
+
+    printWithErrorBand(geFactor, mFac, errFac, "factor", "peak16", handledTU);
+
+    hFactor->SetXTitle("factor");
+    hFactor->SetYTitle("Entries");
+    string outputhistofilename = "";
+    if(quantity == "Energy")
+	outputhistofilename = "plotting/fitting2/factor_histogram.png";
+    else if(quantity == "Shifting")
+	outputhistofilename = "plotting/fittingShifting/factor_histogram.png";
+
+    cGraph->cd();
+    hFactor->Draw("HISTO");
+    cGraph->Print(outputhistofilename.c_str());
+
+    delete hFactor;
+    delete geFactor;
+
+    delete ge04;
+    delete ge06;
+    delete ge16;
+
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
+
+    delete cGraph;
+}
+
+
+
 void GraphPrinter::printOverlapExpAndSimulation() {
     TCanvas* c = new TCanvas("c", "c", 1400, 800);
     
@@ -1967,6 +2124,10 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
 	outputfilename = "normCGauss";
     } else if(term == "normCounts") {
 	outputfilename = "normCounts";
+    } else if(term == "mean") {
+	outputfilename = "mean";
+    } else if(term == "factor") {
+	outputfilename = "factor";
     }
     outputfilename = outputfilename + "_" + ER + "_" + timeUnit + ".png";
 
@@ -2049,6 +2210,10 @@ void GraphPrinter::setGraphAtt(TGraph* inputG, string term, string ER, string ti
 	graphTitle = "Counts-Temperature Correlation";
 	xAxisTitle = "Temperature ({}^{o}C)";
 	yAxisTitle = "Counts";
+    } else if(term == "mean") {
+	graphTitle = "Gaussian Mean";
+	xAxisTitle = "Date";
+	yAxisTitle = "Mean (MeV)";
     }
 
     if(ER != "")
@@ -2116,6 +2281,14 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
 	graphTitle = "Counts Comparison between Before and After Temperature Correction";
 	xAxisTitle = "Date";
 	yAxisTitle = "Counts";
+    } else if(term == "mean") {
+	graphTitle = "Gaussian Mean";
+	xAxisTitle = "Date";
+	yAxisTitle = "Mean (MeV)";
+    } else if(term == "factor") {
+	graphTitle = "Factor for Calibration";
+	xAxisTitle = "Date";
+	yAxisTitle = "Factor";
     }
 
     if(ER != "")
@@ -2145,32 +2318,52 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
     if(term == "cGauss") {
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
-		upper = 50.;
-		lower = -10.;
+		if(quantity == "Energy") {
+		    upper = 50.;
+		    lower = -10.;
+		} else if(quantity == "Shifting") {
+		    upper = 80.;
+		    lower = -10.;
+		}
 	    } else if(timeUnit == "P6H") {
 		upper = 85.;
 		lower = 55.;
 	    }
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
-		upper = 100.;
-		lower = 0.;
+		if(quantity == "Energy") {
+		    upper = 100.;
+		    lower = 0.;
+		} else if(quantity == "Shifting") {
+		    upper = 150.;
+		    lower = 0.;
+		}
 	    } else if(timeUnit == "P6H") {
 		upper = 240.;
 		lower = 180.;
 	    }
 	} else if(ER == "peak16") {
 	    if(timeUnit == "P2H") {
-		upper = 110.;
-		lower = 60.;
+		if(quantity == "Energy") {
+		    upper = 110.;
+		    lower = 60.;
+		} else if(quantity == "Shifting") {
+		    upper = 110.;
+		    lower = 60.;
+		}
 	    } else if(timeUnit == "P6H") {
 		upper = 310.;
 		lower = 260.;
 	    }
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
-		upper = 120.;
-		lower = 30.;
+		if(quantity == "Energy") {
+		    upper = 120.;
+		    lower = 30.;
+		} else if(quantity == "Shifting") {
+		    upper = 150.;
+		    lower = 50.;
+		}
 	    } else if(timeUnit == "P6H") {
 		upper = 310.;
 		lower = 250.;
@@ -2376,6 +2569,30 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		}
 	    }
 	}
+    } else if(term == "mean") {
+	if(ER == "peak04") {
+	    if(quantity == "Energy") {
+		upper = 0.3;
+		lower = 0.25;
+	    } else if(quantity == "Shifting") {
+		upper = 0.4;
+		lower = 0.35;
+	    }
+	} else if(ER == "peak06") {
+	    if(quantity == "Energy") {
+		upper = 0.62;
+		lower = 0.57;
+	    } else if(quantity == "Shifting") {
+		upper = 0.7;
+		lower = 0.65;
+	    }
+	} else if(ER == "peak16") {
+	    upper = 1.47;
+	    lower = 1.42;
+	}
+    } else if(term == "factor") {
+	upper = 1.03;
+	lower = 0.95;
     }
 
     inputAxis ->SetRangeUser(lower, upper);

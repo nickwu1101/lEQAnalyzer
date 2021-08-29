@@ -26,11 +26,11 @@ void TimeAnalysis::execute() {
 
 void TimeAnalysis::test() {
     //analyzeByFitting();
-    analyzeByCounting();
-    //correctFittingAnaByTemp();
-    correctCountingAnaByTemp();
-    //normalizeFittingResult();
-    normalizeCountingResult();
+    //analyzeByCounting();
+    correctFittingAnaByTemp();
+    //correctCountingAnaByTemp();
+    normalizeFittingResult();
+    //normalizeCountingResult();
 
     //fitOnTotalTime();
 }
@@ -1423,7 +1423,7 @@ double TimeAnalysis::correctByTemp(string method, string ER, string timeUnit, do
 		if(quantity == "Energy")
 		    p1 = 0.835191;
 		else if(quantity == "Shifting")
-		    p1 = 0.831710;
+		    p1 = 0.835191;
 	    } else if(timeUnit == "P6H")
 		p1 = 2.729798;
 	} else if(ER == "peak06") {
@@ -1431,7 +1431,7 @@ double TimeAnalysis::correctByTemp(string method, string ER, string timeUnit, do
 		if(quantity == "Energy")
 		    p1 = -1.026552;
 		else if(quantity == "Shifting")
-		    p1 = 1.811485;
+		    p1 = -1.026552;
 	    } else if(timeUnit == "P6H")
 		p1 = -2.622519;
 	} else if(ER == "peak16") {
@@ -1439,7 +1439,7 @@ double TimeAnalysis::correctByTemp(string method, string ER, string timeUnit, do
 		if(quantity == "Energy")
 		    p1 = 0.804824;
 		else if(quantity == "Shifting")
-		    p1 = 1.353339;
+		    p1 = 0.804824;
 	    } else if(timeUnit == "P6H")
 		p1 = 2.844474;
 	} else if(ER == "peak0406") {
@@ -1447,7 +1447,7 @@ double TimeAnalysis::correctByTemp(string method, string ER, string timeUnit, do
 		if(quantity == "Energy")
 		    p1 = -0.138124;
 		else if(quantity == "Shifting")
-		    p1 = 2.718369;
+		    p1 = -0.138124;
 	    } else if(timeUnit == "P6H")
 		p1 = 0.064622;
 	}
@@ -1481,7 +1481,7 @@ double TimeAnalysis::calErrAfterCorrect(string method, string ER, string timeUni
 		p1 = 0.835191;
 		p1Err = 0.;
 	    } else if(quantity == "Shifting") {
-		p1 = 0.831710;
+		p1 = 0.835191;
 		p1Err = 0.;
 	    }
 	} else if(ER == "peak06") {
@@ -1489,7 +1489,7 @@ double TimeAnalysis::calErrAfterCorrect(string method, string ER, string timeUni
 		p1 = -1.026552;
 		p1Err = 0.;
 	    } else if(quantity == "Shifting") {
-		p1 = 1.811485;
+		p1 = -1.026552;
 		p1Err = 0.;
 	    }
 	} else if(ER == "peak16") {
@@ -1497,7 +1497,7 @@ double TimeAnalysis::calErrAfterCorrect(string method, string ER, string timeUni
 		p1 = 0.804824;
 		p1Err = 0.;
 	    } else if(quantity == "Shifting") {
-		p1 = 1.353339;
+		p1 = 0.804824;
 		p1Err = 0.;
 	    }
 	} else if(ER == "peak0406") {
@@ -1505,7 +1505,7 @@ double TimeAnalysis::calErrAfterCorrect(string method, string ER, string timeUni
 		p1 = -0.138124;
 		p1Err = 0.;
 	    } else if(quantity == "Shifting") {
-		p1 = 2.718369;
+		p1 = -0.138124;
 		p1Err = 0.;
 	    }
 	}
