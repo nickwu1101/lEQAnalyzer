@@ -20,6 +20,7 @@ public:
     void   test();
 
     void   printFittingGraph();
+    void   printEstEventGraph();
     void   printCountingGraph();
     void   printFittingTempCorrelation();
     void   printCountingTempCorrelation();
@@ -35,10 +36,13 @@ public:
     void   printOverlapExpAndSimulation();
     void   printOverlapExpAndBkg();
 
+    void   setHandledTimeUnit(string inputStr) { handledTU = inputStr; };
+
 private:
     vector<double> vd;
     string handledTU;
     string quantity;
+
     void   printCorrelationWithTemp(TGraph*, string, string, string);
     void   printCompareMultiG(TGraph*, TGraph*, string, string, string);
     void   printWithErrorBand(TGraph*, double, double, string, string, string);

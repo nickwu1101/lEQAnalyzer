@@ -323,7 +323,7 @@ double PeakFitter::getEstEvent() {
     fGaus->SetParameter(0, fitptr->Parameter(2));
     fGaus->SetParameter(1, fitptr->Parameter(3));
     fGaus->SetParameter(2, fitptr->Parameter(4));
-    return fGaus->Integral(lowerRange, upperRange)/(5./865.);
+    return fGaus->Integral(lowerRange, upperRange)/(5./867.);
 
     delete fGaus;
 }

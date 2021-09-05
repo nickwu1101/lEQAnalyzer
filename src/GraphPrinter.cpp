@@ -8,6 +8,7 @@
 #include <TGraphErrors.h>
 #include <TH1.h>
 #include <TLegend.h>
+#include <TLine.h>
 #include <TMultiGraph.h>
 #include <TPaveText.h>
 #include <TTree.h>
@@ -36,16 +37,17 @@ void GraphPrinter::test() {
     printNormFittingGraph();
     printTempCorrectFittingGraph();
     printCompareCorrectionFittingGraph();
-    printFittingTempCorrelation();
+    //printFittingTempCorrelation();
 
     printFittingMeanGraph();
 
-    handledTU = "P2H";
     printCountingGraph();
     printNormCountingGraph();
     printTempCorrectCountingGraph();
     printCompareCorrectionCountingGraph();
-    printCountingTempCorrelation();
+    //printCountingTempCorrelation();
+
+    printEstEventGraph();
 
     //printOverlapExpAndSimulation();
     //printOverlapExpAndBkg();
@@ -62,6 +64,8 @@ void GraphPrinter::printFittingGraph() {
 	    f = new TFile("ready/fitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    f = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/fitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	f = new TFile("ready/fitResult6.root", "READ");
 
@@ -109,6 +113,8 @@ void GraphPrinter::printFittingGraph() {
 	    foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	foutlier = new TFile("ready/NormalizedFitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
 
@@ -144,12 +150,23 @@ void GraphPrinter::printFittingGraph() {
     int ntimebin16 = 0;
     int ntimebin0406 = 0;
 
+    bool condition06 = true;
+    bool condition0406 = true;
+
     Long64_t nentries = fitTree->GetEntries();
     for(Long64_t entry = 0; entry < nentries; ++entry) {
 	fitTree->GetEntry(entry);
 	outlierTree->GetEntry(entry);
 	if(entryNo == entryNoOutlier) {
 	    TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
+
+	    if(handledTU == "P2H") {
+		condition06 = cg06 < 150.;
+		condition0406 = cg0406 < 150.;
+	    } else if(handledTU == "P4H") {
+		condition06 = true;
+		condition0406 = true;
+	    }
 
 	    if(!isoutlier16 && !isoutlier04) {
 		ge04->SetPoint(ge04->GetN(), tdt->Convert(), cg04);
@@ -159,7 +176,7 @@ void GraphPrinter::printFittingGraph() {
 		ntimebin04++;
 	    }
 
-	    if(!isoutlier16 && !isoutlier06 && cg06 < 150.) {
+	    if(!isoutlier16 && !isoutlier06 && condition06) {
 		ge06->SetPoint(ge06->GetN(), tdt->Convert(), cg06);
 		ge06->SetPointError(ge06->GetN() - 1, 0., cge06);
 		mean06 += cg06;
@@ -175,7 +192,7 @@ void GraphPrinter::printFittingGraph() {
 		ntimebin16++;
 	    }
 
-	    if(!isoutlier16 && !isoutlier0406 && cg0406 < 150.) {
+	    if(!isoutlier16 && !isoutlier0406 && condition0406) {
 		ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), cg0406);
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., cge0406);
 		mean0406 += cg0406;
@@ -232,16 +249,35 @@ void GraphPrinter::printFittingGraph() {
 
 
 
-void GraphPrinter::printCountingGraph() {
+void GraphPrinter::printEstEventGraph() {
+    bool isTempCorrection = false;
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
     TFile* f = nullptr;
-    if(quantity == "Energy")
-	f = new TFile("ready/fluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	f = new TFile("ready/fluctResultS.root", "READ");
+    if(isTempCorrection == false) {
+	if(handledTU == "P2H") {
+	    if(quantity == "Energy")
+		f = new TFile("ready/fitResult.root", "READ");
+	    else if(quantity == "Shifting")
+		f = new TFile("ready/fitResultS.root", "READ");
+	} else if(handledTU == "P4H") {
+	    f = new TFile("ready/fitResult4.root", "READ");
+	} else if(handledTU == "P6H")
+	    f = new TFile("ready/fitResult6.root", "READ");
+    } else if(isTempCorrection == true) {
+	if(handledTU == "P2H") {
+	    if(quantity == "Energy")
+		f = new TFile("ready/TempCorrectFitResult.root", "READ");
+	    else if(quantity == "Shifting")
+		f = new TFile("ready/TempCorrectFitResultS.root", "READ");
+	} else if(handledTU == "P4H") {
+	    f = new TFile("ready/TempCorrectFitResult4.root", "READ");
+	} else if(handledTU == "P6H") {
+	    f = new TFile("ready/TempCorrectFitResult.root", "READ");
+	}
+    }
 
-    TTree* countTree;
+    TTree* fitTree;
     int entryNo;
     int year;
     int month;
@@ -250,40 +286,45 @@ void GraphPrinter::printCountingGraph() {
     int min;
     double sec;
 
-    double counts04;
-    double counts06;
-    double counts16;
-    double counts0406;
+    double cg04;
+    double cg06;
+    double cg16;
+    double cg0406;
 
-    double countse04;
-    double countse06;
-    double countse16;
-    double countse0406;
+    double cge04;
+    double cge06;
+    double cge16;
+    double cge0406;
 
-    f->GetObject("dataCounts", countTree);
-    countTree->SetBranchAddress("entryNo", &entryNo);
-    countTree->SetBranchAddress("year", &year);
-    countTree->SetBranchAddress("month", &month);
-    countTree->SetBranchAddress("day", &day);
-    countTree->SetBranchAddress("hour", &hour);
-    countTree->SetBranchAddress("minute", &min);
-    countTree->SetBranchAddress("second", &sec);
+    f->GetObject("dataFitting", fitTree);
+    fitTree->SetBranchAddress("entryNo", &entryNo);
+    fitTree->SetBranchAddress("year", &year);
+    fitTree->SetBranchAddress("month", &month);
+    fitTree->SetBranchAddress("day", &day);
+    fitTree->SetBranchAddress("hour", &hour);
+    fitTree->SetBranchAddress("minute", &min);
+    fitTree->SetBranchAddress("second", &sec);
 
-    countTree->SetBranchAddress("counts04", &counts04);
-    countTree->SetBranchAddress("counts06", &counts06);
-    countTree->SetBranchAddress("counts16", &counts16);
-    countTree->SetBranchAddress("counts0406", &counts0406);
+    fitTree->SetBranchAddress("cg04", &cg04);
+    fitTree->SetBranchAddress("cg06", &cg06);
+    fitTree->SetBranchAddress("cg16", &cg16);
+    fitTree->SetBranchAddress("cg0406", &cg0406);
 
-    countTree->SetBranchAddress("countse04", &countse04);
-    countTree->SetBranchAddress("countse06", &countse06);
-    countTree->SetBranchAddress("countse16", &countse16);
-    countTree->SetBranchAddress("countse0406", &countse0406);
+    fitTree->SetBranchAddress("cge04", &cge04);
+    fitTree->SetBranchAddress("cge06", &cge06);
+    fitTree->SetBranchAddress("cge16", &cge16);
+    fitTree->SetBranchAddress("cge0406", &cge0406);
 
     TFile* foutlier = nullptr;
-    if(quantity == "Energy")
-	foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
+	else if(quantity == "Shifting")
+	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	foutlier = new TFile("ready/NormalizedFitResult4.root", "READ");
+    } else if(handledTU == "P6H")
+	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
 
     TTree* outlierTree;
     int entryNoOutlier;
@@ -292,7 +333,7 @@ void GraphPrinter::printCountingGraph() {
     bool isoutlier16;
     bool isoutlier0406;
 
-    foutlier->GetObject("dataCounts", outlierTree);
+    foutlier->GetObject("dataFitting", outlierTree);
     outlierTree->SetBranchAddress("entryNo", &entryNoOutlier);
     outlierTree->SetBranchAddress("isoutlier04", &isoutlier04);
     outlierTree->SetBranchAddress("isoutlier06", &isoutlier06);
@@ -315,6 +356,211 @@ void GraphPrinter::printCountingGraph() {
     int ntimebin04 = 0;
     int ntimebin06 = 0;
     int ntimebin16 = 0;
+    int ntimebin0406 = 0;
+
+    bool condition06 = true;
+    bool condition0406 = true;
+
+    Long64_t nentries = fitTree->GetEntries();
+    double estFactor = 5./867.;
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	fitTree->GetEntry(entry);
+	outlierTree->GetEntry(entry);
+	if(entryNo == entryNoOutlier) {
+	    TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
+
+	    if(handledTU == "P2H") {
+		condition06 = cg06 < 150.;
+		condition0406 = cg0406 < 150.;
+	    } else if(handledTU == "P4H" ||
+		      handledTU == "P6H") {
+		condition06 = true;
+		condition0406 = true;
+	    }
+
+	    if(!isoutlier16 && !isoutlier04) {
+		ge04->SetPoint(ge04->GetN(), tdt->Convert(), cg04/estFactor);
+		ge04->SetPointError(ge04->GetN() - 1, 0., cge04/estFactor);
+		mean04 += cg04/estFactor;
+		std04 += (cg04/estFactor)*(cg04/estFactor);
+		ntimebin04++;
+	    }
+
+	    if(!isoutlier16 && !isoutlier06 && condition06) {
+		ge06->SetPoint(ge06->GetN(), tdt->Convert(), cg06/estFactor);
+		ge06->SetPointError(ge06->GetN() - 1, 0., cge06/estFactor);
+		mean06 += cg06/estFactor;
+		std06 += (cg06/estFactor)*(cg06/estFactor);
+		ntimebin06++;
+	    }
+
+	    if(!isoutlier16) {
+		ge16->SetPoint(ge16->GetN(), tdt->Convert(), cg16/estFactor);
+		ge16->SetPointError(ge16->GetN() - 1, 0., cge16/estFactor);
+		mean16 += cg16/estFactor;
+		std16 += (cg16/estFactor)*(cg16/estFactor);
+		ntimebin16++;
+	    }
+
+	    if(!isoutlier16 && !isoutlier0406 && condition0406) {
+		ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), cg0406/estFactor);
+		ge0406->SetPointError(ge0406->GetN() - 1, 0., cge0406/estFactor);
+		mean0406 += cg0406/estFactor;
+		std0406 += (cg0406/estFactor)*(cg0406/estFactor);
+		ntimebin0406++;
+	    }
+
+	    delete tdt;
+	} else {
+	    cout << "Both entry numbers are not match!!!" << endl;
+	    exit(0);
+	}
+    }
+
+    mean04 /= ntimebin04;
+    mean06 /= ntimebin06;
+    mean16 /= ntimebin16;
+    mean0406 /= ntimebin0406;
+
+    std04 -= ntimebin04*mean04*mean04;
+    std06 -= ntimebin06*mean06*mean06;
+    std16 -= ntimebin16*mean16*mean16;
+    std0406 -= ntimebin0406*mean0406*mean0406;
+    std04 = TMath::Sqrt(std04/(ntimebin04 - 1));
+    std06 = TMath::Sqrt(std06/(ntimebin06 - 1));
+    std16 = TMath::Sqrt(std16/(ntimebin16 - 1));
+    std0406 = TMath::Sqrt(std0406/(ntimebin0406 - 1));
+
+    double err04 = std04/TMath::Sqrt(ntimebin04);
+    double err06 = std06/TMath::Sqrt(ntimebin06);
+    double err16 = std16/TMath::Sqrt(ntimebin16);
+    double err0406 = std0406/TMath::Sqrt(ntimebin0406);
+
+    printWithErrorBand(ge04, mean04, err04, "estEvents", "peak04", handledTU);
+    printWithErrorBand(ge06, mean06, err06, "estEvents", "peak06", handledTU);
+    printWithErrorBand(ge16, mean16, err16, "estEvents", "peak16", handledTU);
+    printWithErrorBand(ge0406, mean0406, err0406, "estEvents", "peak0406", handledTU);
+
+    delete ge0406;
+    delete ge16;
+    delete ge06;
+    delete ge04;
+
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
+
+    delete cGraph;
+}
+
+
+
+void GraphPrinter::printCountingGraph() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+
+    TFile* f = nullptr;
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/fluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/fluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/fluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	f = new TFile("ready/fluctResult6.root", "READ");
+    }
+
+    TTree* countTree;
+    int entryNo;
+    int year;
+    int month;
+    int day;
+    int hour;
+    int min;
+    double sec;
+
+    double counts04;
+    double counts06;
+    double counts16;
+    double counts0to25;
+    double counts0406;
+
+    double countse04;
+    double countse06;
+    double countse16;
+    double countse0to25;
+    double countse0406;
+
+    f->GetObject("dataCounts", countTree);
+    countTree->SetBranchAddress("entryNo", &entryNo);
+    countTree->SetBranchAddress("year", &year);
+    countTree->SetBranchAddress("month", &month);
+    countTree->SetBranchAddress("day", &day);
+    countTree->SetBranchAddress("hour", &hour);
+    countTree->SetBranchAddress("minute", &min);
+    countTree->SetBranchAddress("second", &sec);
+
+    countTree->SetBranchAddress("counts04", &counts04);
+    countTree->SetBranchAddress("counts06", &counts06);
+    countTree->SetBranchAddress("counts16", &counts16);
+    countTree->SetBranchAddress("counts0to25", &counts0to25);
+    countTree->SetBranchAddress("counts0406", &counts0406);
+
+    countTree->SetBranchAddress("countse04", &countse04);
+    countTree->SetBranchAddress("countse06", &countse06);
+    countTree->SetBranchAddress("countse16", &countse16);
+    countTree->SetBranchAddress("countse0to25", &countse0to25);
+    countTree->SetBranchAddress("countse0406", &countse0406);
+
+    TFile* foutlier = nullptr;
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	foutlier = new TFile("ready/NormalizedFluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	foutlier = new TFile("ready/NormalizedFluctResult6.root", "READ");
+    }
+
+    TTree* outlierTree;
+    int entryNoOutlier;
+    bool isoutlier04;
+    bool isoutlier06;
+    bool isoutlier16;
+    bool isoutlier0to25;
+    bool isoutlier0406;
+
+    foutlier->GetObject("dataCounts", outlierTree);
+    outlierTree->SetBranchAddress("entryNo", &entryNoOutlier);
+    outlierTree->SetBranchAddress("isoutlier04", &isoutlier04);
+    outlierTree->SetBranchAddress("isoutlier06", &isoutlier06);
+    outlierTree->SetBranchAddress("isoutlier16", &isoutlier16);
+    outlierTree->SetBranchAddress("isoutlier0to25", &isoutlier0to25);
+    outlierTree->SetBranchAddress("isoutlier0406", &isoutlier0406);
+
+    TGraphErrors* ge04 = new TGraphErrors();
+    TGraphErrors* ge06 = new TGraphErrors();
+    TGraphErrors* ge16 = new TGraphErrors();
+    TGraphErrors* ge0to25 = new TGraphErrors();
+    TGraphErrors* ge0406 = new TGraphErrors();
+
+    double mean04 = 0.;
+    double mean06 = 0.;
+    double mean16 = 0.;
+    double mean0to25 = 0.;
+    double mean0406 = 0.;
+    double std04 = 0.;
+    double std06 = 0.;
+    double std0to25 = 0.;
+    double std16 = 0.;
+    double std0406 = 0.;
+    int ntimebin04 = 0;
+    int ntimebin06 = 0;
+    int ntimebin16 = 0;
+    int ntimebin0to25 = 0;
     int ntimebin0406 = 0;
 
     bool condition0406 = true;
@@ -354,6 +600,14 @@ void GraphPrinter::printCountingGraph() {
 		ntimebin16++;
 	    }
 
+	    if(!isoutlier16 && !isoutlier0to25) {
+		ge0to25->SetPoint(ge0to25->GetN(), tdt->Convert(), counts0to25);
+		ge0to25->SetPointError(ge0to25->GetN() - 1, 0., countse0to25);
+		mean0to25 += counts0to25;
+		std0to25 += counts0to25*counts0to25;
+		ntimebin0to25++;
+	    }
+
 	    if(quantity == "Energy")
 		condition0406 = true;
 	    else if(quantity == "Shifting")
@@ -366,7 +620,7 @@ void GraphPrinter::printCountingGraph() {
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., countse0406);
 		mean0406 += counts0406;
 		std0406 += counts0406*counts0406;
-		ntimebin0406++;		
+		ntimebin0406++;
 	    }
 
 	    delete tdt;
@@ -379,28 +633,34 @@ void GraphPrinter::printCountingGraph() {
     mean04 /= ntimebin04;
     mean06 /= ntimebin06;
     mean16 /= ntimebin16;
+    mean0to25 /= ntimebin0to25;
     mean0406 /= ntimebin0406;
 
     std04 -= ntimebin04*mean04*mean04;
     std06 -= ntimebin06*mean06*mean06;
     std16 -= ntimebin16*mean16*mean16;
+    std0to25 -= ntimebin0to25*mean0to25*mean0to25;
     std0406 -= ntimebin0406*mean0406*mean0406;
     std04 = TMath::Sqrt(std04/(ntimebin04 - 1));
     std06 = TMath::Sqrt(std06/(ntimebin06 - 1));
     std16 = TMath::Sqrt(std16/(ntimebin16 - 1));
+    std0to25 = TMath::Sqrt(std0to25/(ntimebin0to25 - 1));
     std0406 = TMath::Sqrt(std0406/(ntimebin0406 - 1));
 
     double err04 = std04/TMath::Sqrt(ntimebin04);
     double err06 = std06/TMath::Sqrt(ntimebin06);
     double err16 = std16/TMath::Sqrt(ntimebin16);
+    double err0to25 = std0to25/TMath::Sqrt(ntimebin0to25);
     double err0406 = std0406/TMath::Sqrt(ntimebin0406);
 
     printWithErrorBand(ge04, mean04, err04, "counts", "peak04", handledTU);
     printWithErrorBand(ge06, mean06, err06, "counts", "peak06", handledTU);
     printWithErrorBand(ge16, mean16, err16, "counts", "peak16", handledTU);
+    printWithErrorBand(ge0to25, mean0to25, err0to25, "counts", "0to25", handledTU);
     printWithErrorBand(ge0406, mean0406, err0406, "counts", "peak0406", handledTU);
 
     delete ge0406;
+    delete ge0to25;
     delete ge16;
     delete ge06;
     delete ge04;
@@ -428,6 +688,8 @@ void GraphPrinter::printFittingTempCorrelation() {
 	    f = new TFile("ready/fitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    f = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/fitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	f = new TFile("ready/fitResult6.root", "READ");
 
@@ -521,10 +783,16 @@ void GraphPrinter::printCountingTempCorrelation() {
     TempHumi* th = new TempHumi();
 
     TFile* f = nullptr;
-    if(quantity == "Energy")
-	f = new TFile("ready/fluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	f = new TFile("ready/fluctResultS.root", "READ");
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/fluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/fluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/fluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	f = new TFile("ready/fluctResult6.root", "READ");
+    }
 
     TTree* countTree;
     int entryNo;
@@ -628,6 +896,8 @@ void GraphPrinter::printTempCorrectFittingGraph() {
 	    f = new TFile("ready/TempCorrectFitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    f = new TFile("ready/TempCorrectFitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/TempCorrectFitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	f = new TFile("ready/TempCorrectFitResult6.root", "READ");
 
@@ -675,6 +945,8 @@ void GraphPrinter::printTempCorrectFittingGraph() {
 	    foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	foutlier = new TFile("ready/NormalizedFitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
 
@@ -804,10 +1076,16 @@ void GraphPrinter::printTempCorrectCountingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
     TFile* f = nullptr;
-    if(quantity == "Energy")
-	f = new TFile("ready/TempCorrectFluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	f = new TFile("ready/TempCorrectFluctResultS.root", "READ");
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/TempCorrectFluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/TempCorrectFluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/TempCorrectFluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	f = new TFile("ready/TempCorrectFluctResult6.root", "READ");
+    }
 
     TTree* countTree;
     int entryNo;
@@ -821,11 +1099,13 @@ void GraphPrinter::printTempCorrectCountingGraph() {
     double counts04;
     double counts06;
     double counts16;
+    double counts0to25;
     double counts0406;
 
     double countse04;
     double countse06;
     double countse16;
+    double countse0to25;
     double countse0406;
 
     f->GetObject("dataCounts", countTree);
@@ -840,24 +1120,33 @@ void GraphPrinter::printTempCorrectCountingGraph() {
     countTree->SetBranchAddress("counts04", &counts04);
     countTree->SetBranchAddress("counts06", &counts06);
     countTree->SetBranchAddress("counts16", &counts16);
+    countTree->SetBranchAddress("counts0to25", &counts0to25);
     countTree->SetBranchAddress("counts0406", &counts0406);
 
     countTree->SetBranchAddress("countse04", &countse04);
     countTree->SetBranchAddress("countse06", &countse06);
     countTree->SetBranchAddress("countse16", &countse16);
+    countTree->SetBranchAddress("countse0to25", &countse0to25);
     countTree->SetBranchAddress("countse0406", &countse0406);
 
     TFile* foutlier = nullptr;
-    if(quantity == "Energy")
-	foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	foutlier = new TFile("ready/NormalizedFluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	foutlier = new TFile("ready/NormalizedFluctResult6.root", "READ");
+    }
 
     TTree* outlierTree;
     int entryNoOutlier;
     bool isoutlier04;
     bool isoutlier06;
     bool isoutlier16;
+    bool isoutlier0to25;
     bool isoutlier0406;
 
     foutlier->GetObject("dataCounts", outlierTree);
@@ -865,24 +1154,29 @@ void GraphPrinter::printTempCorrectCountingGraph() {
     outlierTree->SetBranchAddress("isoutlier04", &isoutlier04);
     outlierTree->SetBranchAddress("isoutlier06", &isoutlier06);
     outlierTree->SetBranchAddress("isoutlier16", &isoutlier16);
+    outlierTree->SetBranchAddress("isoutlier0to25", &isoutlier0to25);
     outlierTree->SetBranchAddress("isoutlier0406", &isoutlier0406);
 
     TGraphErrors* ge04 = new TGraphErrors();
     TGraphErrors* ge06 = new TGraphErrors();
     TGraphErrors* ge16 = new TGraphErrors();
+    TGraphErrors* ge0to25 = new TGraphErrors();
     TGraphErrors* ge0406 = new TGraphErrors();
 
     double mean04 = 0.;
     double mean06 = 0.;
     double mean16 = 0.;
+    double mean0to25 = 0.;
     double mean0406 = 0.;
     double std04 = 0.;
     double std06 = 0.;
     double std16 = 0.;
+    double std0to25 = 0.;
     double std0406 = 0.;
     int ntimebin04 = 0;
     int ntimebin06 = 0;
     int ntimebin16 = 0;
+    int ntimebin0to25 = 0;
     int ntimebin0406 = 0;
 
     Long64_t nentries = countTree->GetEntries();
@@ -916,6 +1210,14 @@ void GraphPrinter::printTempCorrectCountingGraph() {
 		ntimebin16++;
 	    }
 
+	    if(!isoutlier16 && !isoutlier0to25) {
+		ge0to25->SetPoint(ge0to25->GetN(), tdt->Convert(), counts0to25);
+		ge0to25->SetPointError(ge0to25->GetN() - 1, 0., countse0to25);
+		mean0to25 += counts0to25;
+		std0to25 += counts0to25*counts0to25;
+		ntimebin0to25++;
+	    }
+
 	    if(!isoutlier16 && !isoutlier0406) {
 		ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), counts0406);
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., countse0406);
@@ -934,28 +1236,34 @@ void GraphPrinter::printTempCorrectCountingGraph() {
     mean04 /= ntimebin04;
     mean06 /= ntimebin06;
     mean16 /= ntimebin16;
+    mean0to25 /= ntimebin0to25;
     mean0406 /= ntimebin0406;
 
     std04 -= ntimebin04*mean04*mean04;
     std06 -= ntimebin06*mean06*mean06;
     std16 -= ntimebin16*mean16*mean16;
+    std0to25 -= ntimebin0to25*mean0to25*mean0to25;
     std0406 -= ntimebin0406*mean0406*mean0406;
     std04 = TMath::Sqrt(std04/(ntimebin04 - 1));
     std06 = TMath::Sqrt(std06/(ntimebin06 - 1));
     std16 = TMath::Sqrt(std16/(ntimebin16 - 1));
+    std0to25 = TMath::Sqrt(std0to25/(ntimebin0to25 - 1));
     std0406 = TMath::Sqrt(std0406/(ntimebin0406 - 1));
 
     double err04 = std04/TMath::Sqrt(ntimebin04);
     double err06 = std06/TMath::Sqrt(ntimebin06);
     double err16 = std16/TMath::Sqrt(ntimebin16);
+    double err0to25 = std0to25/TMath::Sqrt(ntimebin0to25);
     double err0406 = std0406/TMath::Sqrt(ntimebin0406);
 
     printWithErrorBand(ge04, mean04, err04, "correctedCounts", "peak04", handledTU);
     printWithErrorBand(ge06, mean06, err06, "correctedCounts", "peak06", handledTU);
     printWithErrorBand(ge16, mean16, err16, "correctedCounts", "peak16", handledTU);
+    printWithErrorBand(ge0to25, mean0to25, err0to25, "correctedCounts", "0to25", handledTU);
     printWithErrorBand(ge0406, mean0406, err0406, "correctedCounts", "peak0406", handledTU);
 
     delete ge0406;
+    delete ge0to25;
     delete ge16;
     delete ge06;
     delete ge04;
@@ -984,6 +1292,8 @@ void GraphPrinter::printNormFittingGraph() {
 	    f = new TFile("ready/NormalizedFitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    f = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/NormalizedFitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	f = new TFile("ready/NormalizedFitResult6.root", "READ");
 
@@ -1139,10 +1449,16 @@ void GraphPrinter::printNormCountingGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
     TFile* f = nullptr;
-    if(quantity == "Energy")
-	f = new TFile("ready/NormalizedFluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	f = new TFile("ready/NormalizedFluctResultS.root", "READ");
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    f = new TFile("ready/NormalizedFluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    f = new TFile("ready/NormalizedFluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/NormalizedFluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	f = new TFile("ready/NormalizedFluctResult6.root", "READ");
+    }
 
     TTree* countTree;
     int entryNo;
@@ -1156,16 +1472,19 @@ void GraphPrinter::printNormCountingGraph() {
     double countsn04;
     double countsn06;
     double countsn16;
+    double countsn0to25;
     double countsn0406;
 
     double countsne04;
     double countsne06;
     double countsne16;
+    double countsne0to25;
     double countsne0406;
 
     bool isoutlier04;
     bool isoutlier06;
     bool isoutlier16;
+    bool isoutlier0to25;
     bool isoutlier0406;
 
     f->GetObject("dataCounts", countTree);
@@ -1180,34 +1499,41 @@ void GraphPrinter::printNormCountingGraph() {
     countTree->SetBranchAddress("countsn04", &countsn04);
     countTree->SetBranchAddress("countsn06", &countsn06);
     countTree->SetBranchAddress("countsn16", &countsn16);
+    countTree->SetBranchAddress("countsn0to25", &countsn0to25);
     countTree->SetBranchAddress("countsn0406", &countsn0406);
 
     countTree->SetBranchAddress("countsne04", &countsne04);
     countTree->SetBranchAddress("countsne06", &countsne06);
     countTree->SetBranchAddress("countsne16", &countsne16);
+    countTree->SetBranchAddress("countsne0to25", &countsne0to25);
     countTree->SetBranchAddress("countsne0406", &countsne0406);
 
     countTree->SetBranchAddress("isoutlier04", &isoutlier04);
     countTree->SetBranchAddress("isoutlier06", &isoutlier06);
     countTree->SetBranchAddress("isoutlier16", &isoutlier16);
+    countTree->SetBranchAddress("isoutlier0to25", &isoutlier0to25);
     countTree->SetBranchAddress("isoutlier0406", &isoutlier0406);
 
     TGraphErrors* ge04 = new TGraphErrors();
     TGraphErrors* ge06 = new TGraphErrors();
     TGraphErrors* ge16 = new TGraphErrors();
+    TGraphErrors* ge0to25 = new TGraphErrors();
     TGraphErrors* ge0406 = new TGraphErrors();
 
     double mean04 = 0.;
     double mean06 = 0.;
     double mean16 = 0.;
+    double mean0to25 = 0.;
     double mean0406 = 0.;
     double std04 = 0.;
     double std06 = 0.;
     double std16 = 0.;
+    double std0to25 = 0.;
     double std0406 = 0.;
     int ntimebin04 = 0;
     int ntimebin06 = 0;
     int ntimebin16 = 0;
+    int ntimebin0to25 = 0;
     int ntimebin0406 = 0;
 
     Long64_t nentries = countTree->GetEntries();
@@ -1241,6 +1567,15 @@ void GraphPrinter::printNormCountingGraph() {
 	    ntimebin16++;
 	}
 
+	if(!isoutlier16 && !isoutlier0to25) {
+	    ge0to25->SetPoint(ge0to25->GetN(), tdt->Convert(), countsn0to25);
+	    ge0to25->SetPointError(ge0to25->GetN() - 1, 0., countsne0to25);
+
+	    mean0to25 += countsn0to25;
+	    std0to25 += countsn0to25*countsn0to25;
+	    ntimebin0to25++;
+	}
+
 	if(!isoutlier16 && !isoutlier0406) {
 	    ge0406->SetPoint(ge0406->GetN(), tdt->Convert(), countsn0406);
 	    ge0406->SetPointError(ge0406->GetN() - 1, 0, countsne0406);
@@ -1256,28 +1591,34 @@ void GraphPrinter::printNormCountingGraph() {
     mean04 /= ntimebin04;
     mean06 /= ntimebin06;
     mean16 /= ntimebin16;
+    mean0to25 /= ntimebin0to25;
     mean0406 /= ntimebin0406;
 
     std04 -= ntimebin04*mean04*mean04;
     std06 -= ntimebin06*mean06*mean06;
     std16 -= ntimebin16*mean16*mean16;
+    std0to25 -= ntimebin0to25*mean0to25*mean0to25;
     std0406 -= ntimebin0406*mean0406*mean0406;
     std04 = TMath::Sqrt(std04/(ntimebin04 - 1));
     std06 = TMath::Sqrt(std06/(ntimebin06 - 1));
     std16 = TMath::Sqrt(std16/(ntimebin16 - 1));
+    std0to25 = TMath::Sqrt(std0to25/(ntimebin0to25 - 1));
     std0406 = TMath::Sqrt(std0406/(ntimebin0406 - 1));
 
     double err04 = std04/TMath::Sqrt(ntimebin04);
     double err06 = std06/TMath::Sqrt(ntimebin06);
     double err16 = std16/TMath::Sqrt(ntimebin16);
+    double err0to25 = std0to25/TMath::Sqrt(ntimebin0to25);
     double err0406 = std0406/TMath::Sqrt(ntimebin0406);
 
     printWithErrorBand(ge04, mean04, err04, "normCounts", "peak04", handledTU);
     printWithErrorBand(ge06, mean06, err06, "normCounts", "peak06", handledTU);
     printWithErrorBand(ge16, mean16, err16, "normCounts", "peak16", handledTU);
+    printWithErrorBand(ge0to25, mean0to25, err0to25, "normCounts", "0to25", handledTU);
     printWithErrorBand(ge0406, mean0406, err0406, "normCounts", "peak0406", handledTU);
 
     delete ge0406;
+    delete ge0to25;
     delete ge16;
     delete ge06;
     delete ge04;
@@ -1302,6 +1643,8 @@ void GraphPrinter::printCompareCorrectionFittingGraph() {
 	    fraw = new TFile("ready/fitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    fraw = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	fraw = new TFile("ready/fitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	fraw = new TFile("ready/fitResult6.root", "READ");
 
@@ -1349,6 +1692,8 @@ void GraphPrinter::printCompareCorrectionFittingGraph() {
 	    fcor = new TFile("ready/TempCorrectFitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    fcor = new TFile("ready/TempCorrectFitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	fcor = new TFile("ready/TempCorrectFitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	fcor = new TFile("ready/TempCorrectFitResult6.root", "READ");
 
@@ -1396,6 +1741,8 @@ void GraphPrinter::printCompareCorrectionFittingGraph() {
 	    foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	foutlier = new TFile("ready/NormalizedFitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
 
@@ -1510,10 +1857,16 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     TempHumi* th = new TempHumi();
 
     TFile* fraw = nullptr;
-    if(quantity == "Energy")
-	fraw = new TFile("ready/fluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	fraw = new TFile("ready/fluctResultS.root", "READ");
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    fraw = new TFile("ready/fluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    fraw = new TFile("ready/fluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	fraw = new TFile("ready/fluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	fraw = new TFile("ready/fluctResult6.root", "READ");
+    }
 
     TTree* rawTree;
     int rentryNo;
@@ -1527,11 +1880,13 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     double raw04;
     double raw06;
     double raw16;
+    double raw0to25;
     double raw0406;
 
     double rawe04;
     double rawe06;
     double rawe16;
+    double rawe0to25;
     double rawe0406;
 
     fraw->GetObject("dataCounts", rawTree);
@@ -1546,18 +1901,26 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     rawTree->SetBranchAddress("counts04", &raw04);
     rawTree->SetBranchAddress("counts06", &raw06);
     rawTree->SetBranchAddress("counts16", &raw16);
+    rawTree->SetBranchAddress("counts0to25", &raw0to25);
     rawTree->SetBranchAddress("counts0406", &raw0406);
 
     rawTree->SetBranchAddress("countse04", &rawe04);
     rawTree->SetBranchAddress("countse06", &rawe06);
     rawTree->SetBranchAddress("countse16", &rawe16);
+    rawTree->SetBranchAddress("countse0to25", &rawe0to25);
     rawTree->SetBranchAddress("countse0406", &rawe0406);
 
     TFile* fcor = nullptr;
-    if(quantity == "Energy")
-	fcor = new TFile("ready/TempCorrectFluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	fcor = new TFile("ready/TempCorrectFluctResultS.root", "READ");
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    fcor = new TFile("ready/TempCorrectFluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    fcor = new TFile("ready/TempCorrectFluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	fcor = new TFile("ready/TempCorrectFluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	fcor = new TFile("ready/TempCorrectFluctResult6.root", "READ");
+    }
 
     TTree* corTree;
     int centryNo;
@@ -1571,11 +1934,13 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     double cor04;
     double cor06;
     double cor16;
+    double cor0to25;
     double cor0406;
 
     double core04;
     double core06;
     double core16;
+    double core0to25;
     double core0406;
 
     fcor->GetObject("dataCounts", corTree);
@@ -1590,18 +1955,26 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     corTree->SetBranchAddress("counts04", &cor04);
     corTree->SetBranchAddress("counts06", &cor06);
     corTree->SetBranchAddress("counts16", &cor16);
+    corTree->SetBranchAddress("counts0to25", &cor0to25);
     corTree->SetBranchAddress("counts0406", &cor0406);
 
     corTree->SetBranchAddress("countse04", &core04);
     corTree->SetBranchAddress("countse06", &core06);
     corTree->SetBranchAddress("countse16", &core16);
+    corTree->SetBranchAddress("countse0to25", &core0to25);
     corTree->SetBranchAddress("countse0406", &core0406);
 
     TFile* foutlier = nullptr;
-    if(quantity == "Energy")
-	foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
-    else if(quantity == "Shifting")
-	foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
+    if(handledTU == "P2H") {
+	if(quantity == "Energy")
+	    foutlier = new TFile("ready/NormalizedFluctResult.root", "READ");
+	else if(quantity == "Shifting")
+	    foutlier = new TFile("ready/NormalizedFluctResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	foutlier = new TFile("ready/NormalizedFluctResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	foutlier = new TFile("ready/NormalizedFluctResult6.root", "READ");
+    }
 
     TTree* outlierTree;
     int entryNoOutlier;
@@ -1614,11 +1987,13 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     TGraphErrors* geRaw04 = new TGraphErrors();
     TGraphErrors* geRaw06 = new TGraphErrors();
     TGraphErrors* geRaw16 = new TGraphErrors();
+    TGraphErrors* geRaw0to25 = new TGraphErrors();
     TGraphErrors* geRaw0406 = new TGraphErrors();
 
     TGraphErrors* geCor04 = new TGraphErrors();
     TGraphErrors* geCor06 = new TGraphErrors();
     TGraphErrors* geCor16 = new TGraphErrors();
+    TGraphErrors* geCor0to25 = new TGraphErrors();
     TGraphErrors* geCor0406 = new TGraphErrors();
 
     Long64_t rnentries = rawTree->GetEntries();
@@ -1633,11 +2008,13 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
 	    geRaw04->SetPoint(geRaw04->GetN(), tdt->Convert(), raw04);
 	    geRaw06->SetPoint(geRaw06->GetN(), tdt->Convert(), raw06);
 	    geRaw16->SetPoint(geRaw16->GetN(), tdt->Convert(), raw16);
+	    geRaw0to25->SetPoint(geRaw0to25->GetN(), tdt->Convert(), raw0to25);
 	    geRaw0406->SetPoint(geRaw0406->GetN(), tdt->Convert(), raw0406);
 
 	    geRaw04->SetPointError(geRaw04->GetN() - 1, 0., rawe04);
 	    geRaw06->SetPointError(geRaw06->GetN() - 1, 0., rawe06);
 	    geRaw16->SetPointError(geRaw16->GetN() - 1, 0., rawe16);
+	    geRaw0to25->SetPointError(geRaw0to25->GetN() - 1, 0., rawe0to25);
 	    geRaw0406->SetPointError(geRaw0406->GetN() - 1, 0., rawe0406);
 
 	    delete tdt;
@@ -1646,7 +2023,7 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
 
     Long64_t cnentries = corTree->GetEntries();
     for(Long64_t entry = 0; entry < cnentries; ++entry) {
-	corTree->GetEntry(entry);
+	corTree->GetEntry(entry);    double rawe0to25;
 	outlierTree->GetEntry(entry);
 	if(centryNo == entryNoOutlier) {
 	    if(isoutlier16)
@@ -1656,11 +2033,13 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
 	    geCor04->SetPoint(geCor04->GetN(), tdt->Convert(), cor04);
 	    geCor06->SetPoint(geCor06->GetN(), tdt->Convert(), cor06);
 	    geCor16->SetPoint(geCor16->GetN(), tdt->Convert(), cor16);
+	    geCor0to25->SetPoint(geCor0to25->GetN(), tdt->Convert(), cor0to25);
 	    geCor0406->SetPoint(geCor0406->GetN(), tdt->Convert(), cor0406);
 
 	    geCor04->SetPointError(geCor04->GetN() - 1, 0., core04);
 	    geCor06->SetPointError(geCor06->GetN() - 1, 0., core06);
 	    geCor16->SetPointError(geCor16->GetN() - 1, 0., core16);
+	    geCor0to25->SetPointError(geCor0to25->GetN() - 1, 0., core0to25);
 	    geCor0406->SetPointError(geCor0406->GetN() - 1, 0., core0406);
 
 	    delete tdt;
@@ -1670,14 +2049,17 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
     printCompareMultiG(geRaw04, geCor04, "counts", "peak04", handledTU);
     printCompareMultiG(geRaw06, geCor06, "counts", "peak06", handledTU);
     printCompareMultiG(geRaw16, geCor16, "counts", "peak16", handledTU);
+    printCompareMultiG(geRaw0to25, geCor0to25, "counts", "0to25", handledTU);
     printCompareMultiG(geRaw0406, geCor0406, "counts", "peak0406", handledTU);
 
     delete geCor0406;
+    delete geCor0to25;
     delete geCor16;
     delete geCor06;
     delete geCor04;
 
     delete geRaw0406;
+    delete geRaw0to25;
     delete geRaw16;
     delete geRaw06;
     delete geRaw04;
@@ -1712,6 +2094,8 @@ void GraphPrinter::printFittingMeanGraph() {
 	    f = new TFile("ready/fitResult.root", "READ");
 	else if(quantity == "Shifting")
 	    f = new TFile("ready/fitResultS.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/fitResult4.root", "READ");
     } else if(handledTU == "P6H")
 	f = new TFile("ready/fitResult6.root", "READ");
 
@@ -2053,6 +2437,18 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
     TGraphErrors* geMean = new TGraphErrors();
     TGraphErrors* ge1Sigma = new TGraphErrors();
     TGraphErrors* ge2Sigma = new TGraphErrors();
+
+    TDatime* dt0418 = new TDatime(2021, 4, 18, 22, 11, 0);
+    TDatime* dt0503 = new TDatime(2021, 5, 3, 14, 7, 0);
+    TDatime* dt0508 = new TDatime(2021, 5, 8, 12, 35, 0);
+    TDatime* dt0522 = new TDatime(2021, 5, 23, 3, 57, 0);
+    TDatime* dt0525 = new TDatime(2021, 5, 26, 0, 47, 0);
+    TGraph* g0418 = new TGraph();
+    TGraph* g0503 = new TGraph();
+    TGraph* g0508 = new TGraph();
+    TGraph* g0522 = new TGraph();
+    TGraph* g0525 = new TGraph();
+
     for(int i = 0; i < 2; i++) {
 	TDatime* tdt = nullptr;
 	if(i == 0)
@@ -2068,11 +2464,23 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
 	ge1Sigma->SetPointError(i, 0., bandWidth);
 	ge2Sigma->SetPointError(i, 0., 2*bandWidth);
 
+	g0418->SetPoint(i, dt0418->Convert(), ((double)i)*(1e10));
+	g0503->SetPoint(i, dt0503->Convert(), ((double)i)*(1e10));
+	g0508->SetPoint(i, dt0508->Convert(), ((double)i)*(1e10));
+	g0522->SetPoint(i, dt0522->Convert(), ((double)i)*(1e10));
+	g0525->SetPoint(i, dt0525->Convert(), ((double)i)*(1e10));
+
 	delete tdt;
     }
 
     setGraphAtt(dataG, term, ER, timeUnit);
     setErrorBandAtt(geMean, ge1Sigma, ge2Sigma, "formal");
+
+    g0418->SetLineColor(kRed);
+    g0503->SetLineColor(kRed);
+    g0508->SetLineColor(kRed);
+    g0522->SetLineColor(kRed);
+    g0525->SetLineColor(kRed);
 
     cMG->cd();
     TMultiGraph* mg = new TMultiGraph();
@@ -2080,6 +2488,12 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
     mg->Add(ge1Sigma, "A3");
     mg->Add(geMean, "LC");
     mg->Add(dataG, "AP");
+
+    mg->Add(g0418, "LC");
+    mg->Add(g0503, "LC");
+    mg->Add(g0508, "LC");
+    mg->Add(g0522, "LC");
+    mg->Add(g0525, "LC");
     setMultiGAtt(mg, term, ER, timeUnit);
     setRangeUser(mg->GetYaxis(), term, ER, timeUnit);
     mg->Draw("A");
@@ -2128,6 +2542,8 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
 	outputfilename = "mean";
     } else if(term == "factor") {
 	outputfilename = "factor";
+    } else if(term == "estEvents") {
+	outputfilename = "estEvents";
     }
     outputfilename = outputfilename + "_" + ER + "_" + timeUnit + ".png";
 
@@ -2138,6 +2554,18 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
 
     mg->GetListOfGraphs()->Clear();
     delete mg;
+
+    delete g0525;
+    delete g0522;
+    delete g0508;
+    delete g0503;
+    delete g0418;
+
+    delete dt0525;
+    delete dt0522;
+    delete dt0508;
+    delete dt0503;
+    delete dt0418;
 
     delete ge2Sigma;
     delete ge1Sigma;
@@ -2188,12 +2616,20 @@ void GraphPrinter::setGraphAtt(TGraph* inputG, string term, string ER, string ti
 
 	if(timeUnit == "P2H")
 	    yAxisTitle = "C_{2hr}/#bar{C}_{2hr}";
+	else if(timeUnit == "P4H")
+	    yAxisTitle = "C_{4hr}/#bar{C}_{4hr}";
+	else if(timeUnit == "P6H")
+	    yAxisTitle = "C_{6hr}/#bar{C}_{6hr}";
     } else if(term == "normCounts") {
 	graphTitle = "Normalized Counting Events";
 	xAxisTitle = "Date";
 
 	if(timeUnit == "P2H")
 	    yAxisTitle = "N_{2hr}/#bar{N}_{2hr}";
+	else if(timeUnit == "P4H")
+	    yAxisTitle = "N_{4hr}/#bar{N}_{4hr}";
+	else if(timeUnit == "P6H")
+	    yAxisTitle = "N_{6hr}/#bar{N}_{6hr}";
     } else if(term == "correctedCGauss") {
 	graphTitle = "Gaussian Coefficient with Correction by Temperature";
 	xAxisTitle = "Date";
@@ -2259,12 +2695,20 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
 
 	if(timeUnit == "P2H")
 	    yAxisTitle = "C_{2hr}/#bar{C}_{2hr}";
+	else if(timeUnit == "P4H")
+	    yAxisTitle = "C_{4hr}/#bar{C}_{4hr}";
+	else if(timeUnit == "P6H")
+	    yAxisTitle = "C_{6hr}/#bar{C}_{6hr}";
     } else if(term == "normCounts") {
 	graphTitle = "Normalized Counting Events";
 	xAxisTitle = "Date";
 
 	if(timeUnit == "P2H")
 	    yAxisTitle = "N_{2hr}/#bar{N}_{2hr}";
+	else if(timeUnit == "P4H")
+	    yAxisTitle = "N_{4hr}/#bar{N}_{4hr}";
+	else if(timeUnit == "P6H")
+	    yAxisTitle = "N_{6hr}/#bar{N}_{6hr}";
     } else if(term == "correctedCGauss") {
 	graphTitle = "Gaussian Coefficient with Correction by Temperature";
 	xAxisTitle = "Date";
@@ -2289,19 +2733,74 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
 	graphTitle = "Factor for Calibration";
 	xAxisTitle = "Date";
 	yAxisTitle = "Factor";
+    } else if(term == "estEvents") {
+	graphTitle = "Estimated Events by Fitting";
+	xAxisTitle = "Date";
+	yAxisTitle = "Estimated Events";
     }
 
     if(ER != "")
 	graphTitle = graphTitle + " (" + takePeakTypeStr(ER, "elementFirst") + ")";
 
     if(xAxisTitle == "Date") {
-	TDatime beginDT(2021, 4, 18, 0, 0, 0); // original 4/18
-	TDatime finalDT(2021, 6, 7, 0, 0, 0); // original 6/7
+	string zoomtype = "05";
+	if(zoomtype == "Full") {
+	    TDatime beginDT(2021, 4, 18, 0, 0, 0); // original 4/18
+	    TDatime finalDT(2021, 6, 7, 0, 0, 0); // original 6/7
 
-	inputMG->GetXaxis()->SetRangeUser(beginDT.Convert(), finalDT.Convert());
-	inputMG->GetXaxis()->SetTimeDisplay(kTRUE);
-	inputMG->GetXaxis()->SetNdivisions(10, 5, 0, kFALSE);
-	inputMG->GetXaxis()->SetTimeFormat("%m\/%d");
+	    inputMG->GetXaxis()->SetRangeUser(beginDT.Convert(), finalDT.Convert());
+	    inputMG->GetXaxis()->SetTimeDisplay(kTRUE);
+	    inputMG->GetXaxis()->SetNdivisions(10, 5, 0, kFALSE);
+	    inputMG->GetXaxis()->SetTimeFormat("%m\/%d");
+	} else if(zoomtype == "0418") {
+	    TDatime beginDT(2021, 4, 18, 0, 0, 0); // original 4/18
+	    TDatime finalDT(2021, 4, 21, 0, 0, 0); // original 6/7
+
+	    inputMG->GetXaxis()->SetRangeUser(beginDT.Convert(), finalDT.Convert());
+	    inputMG->GetXaxis()->SetTimeDisplay(kTRUE);
+	    inputMG->GetXaxis()->SetNdivisions(3, 6, 3, kFALSE);
+	    inputMG->GetXaxis()->SetTimeFormat("%m\/%d, %Hh");
+	} else if(zoomtype == "0503") {
+	    TDatime beginDT(2021, 4, 30, 0, 0, 0); // original 4/18
+	    TDatime finalDT(2021, 5, 6, 0, 0, 0); // original 6/7
+
+	    inputMG->GetXaxis()->SetRangeUser(beginDT.Convert(), finalDT.Convert());
+	    inputMG->GetXaxis()->SetTimeDisplay(kTRUE);
+	    inputMG->GetXaxis()->SetNdivisions(6, 6, 3, kFALSE);
+	    inputMG->GetXaxis()->SetTimeFormat("%m\/%d, %Hh");
+	} else if(zoomtype == "0508") {
+	    TDatime beginDT(2021, 5, 5, 0, 0, 0); // original 4/18
+	    TDatime finalDT(2021, 5, 11, 0, 0, 0); // original 6/7
+
+	    inputMG->GetXaxis()->SetRangeUser(beginDT.Convert(), finalDT.Convert());
+	    inputMG->GetXaxis()->SetTimeDisplay(kTRUE);
+	    inputMG->GetXaxis()->SetNdivisions(6, 6, 3, kFALSE);
+	    inputMG->GetXaxis()->SetTimeFormat("%m\/%d, %Hh");
+	} else if(zoomtype == "0522") {
+	    TDatime beginDT(2021, 5, 19, 0, 0, 0); // original 4/18
+	    TDatime finalDT(2021, 5, 25, 0, 0, 0); // original 6/7
+
+	    inputMG->GetXaxis()->SetRangeUser(beginDT.Convert(), finalDT.Convert());
+	    inputMG->GetXaxis()->SetTimeDisplay(kTRUE);
+	    inputMG->GetXaxis()->SetNdivisions(6, 6, 3, kFALSE);
+	    inputMG->GetXaxis()->SetTimeFormat("%m\/%d, %Hh");
+	} else if(zoomtype == "0525") {
+	    TDatime beginDT(2021, 5, 22, 0, 0, 0); // original 4/18
+	    TDatime finalDT(2021, 5, 28, 0, 0, 0); // original 6/7
+
+	    inputMG->GetXaxis()->SetRangeUser(beginDT.Convert(), finalDT.Convert());
+	    inputMG->GetXaxis()->SetTimeDisplay(kTRUE);
+	    inputMG->GetXaxis()->SetNdivisions(6, 6, 3, kFALSE);
+	    inputMG->GetXaxis()->SetTimeFormat("%m\/%d, %Hh");
+	} else if(zoomtype == "05") {
+	    TDatime beginDT(2021, 4, 29, 0, 0, 0); // original 4/18
+	    TDatime finalDT(2021, 5, 17, 0, 0, 0); // original 6/7
+
+	    inputMG->GetXaxis()->SetRangeUser(beginDT.Convert(), finalDT.Convert());
+	    inputMG->GetXaxis()->SetTimeDisplay(kTRUE);
+	    inputMG->GetXaxis()->SetNdivisions(18, 2, 0, kFALSE);
+	    inputMG->GetXaxis()->SetTimeFormat("%m\/%d");
+	}
     }
 
     inputMG->GetHistogram()->SetTitle(graphTitle.c_str());
@@ -2319,12 +2818,15 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 50.;
-		    lower = -10.;
+		    upper = 35.;
+		    lower = 0.;
 		} else if(quantity == "Shifting") {
 		    upper = 80.;
 		    lower = -10.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 60.;
+		lower = 10.;
 	    } else if(timeUnit == "P6H") {
 		upper = 85.;
 		lower = 55.;
@@ -2332,12 +2834,15 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 100.;
-		    lower = 0.;
+		    upper = 90.;
+		    lower = 30.;
 		} else if(quantity == "Shifting") {
 		    upper = 150.;
 		    lower = 0.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 170.;
+		lower = 50.;
 	    } else if(timeUnit == "P6H") {
 		upper = 240.;
 		lower = 180.;
@@ -2346,11 +2851,14 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
 		    upper = 110.;
-		    lower = 60.;
+		    lower = 70.;
 		} else if(quantity == "Shifting") {
 		    upper = 110.;
 		    lower = 60.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 210.;
+		lower = 150.;
 	    } else if(timeUnit == "P6H") {
 		upper = 310.;
 		lower = 260.;
@@ -2359,11 +2867,14 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
 		    upper = 120.;
-		    lower = 30.;
+		    lower = 50.;
 		} else if(quantity == "Shifting") {
 		    upper = 150.;
 		    lower = 50.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 250.;
+		lower = 150.;
 	    } else if(timeUnit == "P6H") {
 		upper = 310.;
 		lower = 250.;
@@ -2373,22 +2884,34 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 25000.;
-		    lower = 15000.;
+		    upper = 39000.;
+		    lower = 32000.;
 		} else if(quantity == "Shifting") {
 		    upper = 25000.;
 		    lower = 14000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 76000.;
+		lower = 68000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 114000.;
+		lower = 102000.;
 	    }
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 40000.;
-		    lower = 30000.;
+		    upper = 39000.;
+		    lower = 31000.;
 		} else if(quantity == "Shifting") {
 		    upper = 54000.;
 		    lower = 44000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 68000.;
+		lower = 60000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 104000.;
+		lower = 90000.;
 	    }
 	} else if(ER == "peak16") {
 	    if(timeUnit == "P2H") {
@@ -2399,6 +2922,12 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 24000.;
 		    lower = 20000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 46000.;
+		lower = 40000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 69000.;
+		lower = 60000.;
 	    }
 	} else if(ER == "0to25") {
 	    if(timeUnit == "P2H") {
@@ -2409,16 +2938,28 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		    upper = 480000.;
 		    lower = 400000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 940000.;
+		lower = 840000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 1410000.;
+		lower = 1200000.;
 	    }
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 65000.;
-		    lower = 55000.;
+		    upper = 76000.;
+		    lower = 68000.;
 		} else if(quantity == "Shifting") {
 		    upper = 80000.;
 		    lower = 60000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 143000.;
+		lower = 130000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 214000.;
+		lower = 200000.;
 	    }
 	}
     } else if(term == "normCGauss") {
@@ -2428,12 +2969,18 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	    if(timeUnit == "P2H") {
 		upper = dup;
 		lower = ddw;
+	    } else if(timeUnit == "P4H") {
+		upper = dup;
+		lower = ddw;
 	    } else if(timeUnit == "P6H") {
 		upper = dup;
 		lower = ddw;
 	    }
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
+		upper = dup;
+		lower = ddw;
+	    } else if(timeUnit == "P4H") {
 		upper = dup;
 		lower = ddw;
 	    } else if(timeUnit == "P6H") {
@@ -2444,12 +2991,18 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	    if(timeUnit == "P2H") {
 		upper = dup;
 		lower = ddw;
+	    } else if(timeUnit == "P4H") {
+		upper = dup;
+		lower = ddw;
 	    } else if(timeUnit == "P6H") {
 		upper = dup;
 		lower = ddw;
 	    }
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
+		upper = dup;
+		lower = ddw;
+	    } else if(timeUnit == "P4H") {
 		upper = dup;
 		lower = ddw;
 	    } else if(timeUnit == "P6H") {
@@ -2458,10 +3011,13 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	    }
 	}
     } else if(term == "normCounts") {
-	double dup = 1.05;
-	double ddw = 0.95;
+	double dup = 1.1;
+	double ddw = 0.9;
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
+		upper = dup;
+		lower = ddw;
+	    } else if(timeUnit == "P4H") {
 		upper = dup;
 		lower = ddw;
 	    } else if(timeUnit == "P6H") {
@@ -2472,6 +3028,9 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	    if(timeUnit == "P2H") {
 		upper = dup;
 		lower = ddw;
+	    } else if(timeUnit == "P4H") {
+		upper = dup;
+		lower = ddw;
 	    } else if(timeUnit == "P6H") {
 		upper = dup;
 		lower = ddw;
@@ -2480,12 +3039,29 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	    if(timeUnit == "P2H") {
 		upper = dup;
 		lower = ddw;
+	    } else if(timeUnit == "P4H") {
+		upper = dup;
+		lower = ddw;
+	    } else if(timeUnit == "P6H") {
+		upper = dup;
+		lower = ddw;
+	    }
+	} else if(ER == "0to25") {
+	    if(timeUnit == "P2H") {
+		upper = dup;
+		lower = ddw;
+	    } else if(timeUnit == "P4H") {
+		upper = dup;
+		lower = ddw;
 	    } else if(timeUnit == "P6H") {
 		upper = dup;
 		lower = ddw;
 	    }
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
+		upper = dup;
+		lower = ddw;
+	    } else if(timeUnit == "P4H") {
 		upper = dup;
 		lower = ddw;
 	    } else if(timeUnit == "P6H") {
@@ -2496,16 +3072,22 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
     } else if(term == "correctedCGauss") {
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
-		upper = 50.;
-		lower = -10.;
+		upper = 35.;
+		lower = 0.;
+	    } else if(timeUnit == "P4H") {
+		upper = 60.;
+		lower = 0.;
 	    } else if(timeUnit == "P6H") {
 		upper = 85.;
 		lower = 55.;
 	    }
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
-		upper = 100.;
-		lower = 0.;
+		upper = 90.;
+		lower = 30.;
+	    } else if(timeUnit == "P4H") {
+		upper = 170.;
+		lower = 50.;
 	    } else if(timeUnit == "P6H") {
 		upper = 240.;
 		lower = 180.;
@@ -2513,7 +3095,10 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak16") {
 	    if(timeUnit == "P2H") {
 		upper = 110.;
-		lower = 60.;
+		lower = 70.;
+	    } else if(timeUnit == "P4H") {
+		upper = 210.;
+		lower = 150.;
 	    } else if(timeUnit == "P6H") {
 		upper = 310.;
 		lower = 260.;
@@ -2521,7 +3106,10 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
 		upper = 120.;
-		lower = 30.;
+		lower = 50.;
+	    } else if(timeUnit == "P4H") {
+		upper = 250.;
+		lower = 150.;
 	    } else if(timeUnit == "P6H") {
 		upper = 310.;
 		lower = 250.;
@@ -2531,42 +3119,77 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 40000.;
-		    lower = 15000.;
+		    upper = 39000.;
+		    lower = 32000.;
 		} else if(quantity == "Shifting") {
 		    upper = 25000.;
 		    lower = 14000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 76000.;
+		lower = 68000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 114000.;
+		lower = 102000.;
 	    }
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 100000.;
-		    lower = 70000.;
+		    upper = 39000.;
+		    lower = 30000.;
 		} else if(quantity == "Shifting") {
 		    upper = 54000.;
 		    lower = 44000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 69000.;
+		lower = 60000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 104000.;
+		lower = 90000.;
 	    }
 	} else if(ER == "peak16") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 27000.;
-		    lower = 0.;
+		    upper = 22000.;
+		    lower = 10000.;
 		} else if(quantity == "Shifting") {
 		    upper = 24000.;
 		    lower = 20000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 46000.;
+		lower = 40000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 69000.;
+		lower = 60000.;
+	    }
+	} else if(ER == "0to25") {
+	    if(timeUnit == "P2H") {
+		upper = 480000.;
+		lower = 400000.;
+	    } else if(timeUnit == "P4H") {
+		upper = 940000.;
+		lower = 840000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 1410000.;
+		lower = 1200000.;
 	    }
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 135000.;
-		    lower = 100000.;
+		    upper = 76000.;
+		    lower = 68000.;
 		} else if(quantity == "Shifting") {
 		    upper = 80000.;
 		    lower = 60000.;
 		}
+	    } else if(timeUnit == "P4H") {
+		upper = 143000.;
+		lower = 130000.;
+	    } else if(timeUnit == "P6H") {
+		upper = 214000.;
+		lower = 200000.;
 	    }
 	}
     } else if(term == "mean") {
@@ -2593,6 +3216,52 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
     } else if(term == "factor") {
 	upper = 1.03;
 	lower = 0.95;
+    } else if(term == "estEvents") {
+	if(ER == "peak04") {
+	    if(timeUnit == "P2H") {
+		upper = 6090.;
+		lower = 0.;
+	    } else if(timeUnit == "P4H") {
+		upper = 10440.;
+		lower = 1740.;
+	    } else if(timeUnit == "P6H") {
+		upper = 14790.;
+		lower = 9570.;
+	    }
+	} else if(ER == "peak06") {
+	    if(timeUnit == "P2H") {
+		upper = 15660.;
+		lower = 5220.;
+	    } else if(timeUnit == "P4H") {
+		upper = 30276.;
+		lower = 8700.;
+	    } else if(timeUnit == "P6H") {
+		upper = 41760.;
+		lower = 31320.;
+	    }
+	} else if(ER == "peak16") {
+	    if(timeUnit == "P2H") {
+		upper = 19140.;
+		lower = 12180.;
+	    } else if(timeUnit == "P4H") {
+		upper = 36540.;
+		lower = 26100.;
+	    } else if(timeUnit == "P6H") {
+		upper = 53940.;
+		lower = 45240.;
+	    }
+	} else if(ER == "peak0406") {
+	    if(timeUnit == "P2H") {
+		upper = 20880.;
+		lower = 8700.;
+	    } else if(timeUnit == "P4H") {
+		upper = 43500.;
+		lower = 26100.;
+	    } else if(timeUnit == "P6H") {
+		upper = 53940.;
+		lower = 43500.;
+	    }
+	}
     }
 
     inputAxis ->SetRangeUser(lower, upper);

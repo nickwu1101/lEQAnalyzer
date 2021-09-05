@@ -18,6 +18,7 @@ void main_fluctuation();
 void main_merge();
 void main_countTemp();
 void main_timeAna();
+void main_IQR();
 void main_help();
 
 int anaType = 0;
@@ -78,6 +79,10 @@ int main(int argc, char** argv) {
 	    anaType = 9;
 	    break;
 	}
+	else if(arg == "-IQR") {
+	    anaType = 10;
+	    break;
+	}
 	else {
 	    std::cout << "Unknown option ... print usage" << std::endl;
 	    anaType = -1;
@@ -120,6 +125,9 @@ int main(int argc, char** argv) {
     case 9:
 	main_timeAna();
 	break;
+    case 10:
+	main_IQR();
+	break;
     }
 
     return 0;
@@ -132,7 +140,12 @@ void main_test() {
     //TempHumi *testObj = new TempHumi();
     TimeAnalysis *testObj = new TimeAnalysis();
     GraphPrinter *testObj2 = new GraphPrinter();
-    testObj->test();
+    //testObj->test();
+    testObj2->setHandledTimeUnit("P2H");
+    testObj2->test();
+    testObj2->setHandledTimeUnit("P4H");
+    testObj2->test();
+    testObj2->setHandledTimeUnit("P6H");
     testObj2->test();
 }
 
@@ -180,6 +193,11 @@ void main_countTemp() {
 }
 
 void main_timeAna() {
+}
+
+void main_IQR() {
+    TimeAnalysis* ta = new TimeAnalysis();
+    ta->analyzeBestBinWidth();
 }
 
 void main_help() {
