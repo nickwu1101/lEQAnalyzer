@@ -29,6 +29,7 @@ public:
 private:
     vector<double> vd;
     string handledTU;
+    string timeRange;
     string quantity;
 
     double const q1x = 0.25;

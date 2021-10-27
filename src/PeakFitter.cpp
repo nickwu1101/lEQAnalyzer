@@ -141,7 +141,7 @@ void PeakFitter::fitPeak() {
     pt->AddText(line);
     */
 
-    pt->Draw();
+    //pt->Draw();
 
     
 

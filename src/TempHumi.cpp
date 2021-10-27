@@ -121,10 +121,11 @@ void TempHumi::makeTempHumiPlotting() {
 	    if(timeUnit == "15min") {
 		xtime = (double)dt->getHour() + ((double)dt->getMinute()/60.);
 	    } else if(timeUnit == "1hour") {
-		if(dt->getMinute() != 0 || dt->getSecond() != 0)
+		if(dt->getMinute() != 0 || dt->getSecond() != 0) {
 		    continue;
-		else
+		} else {
 		    xtime = (double)dt->getHour();
+		}
 	    }
 	} else if (timeLengthOfGraph == "month") {
 	    adding2Graph = dt->getDate().substr(0, 6);
@@ -244,7 +245,16 @@ void TempHumi::printCanvas() {
 	    double countHour = hourFromDay + hourInDay;
 	    double countDay = countHour/24.;
 
-	    temp[countDay] = thisTemp;
+	    TDatime* tdt = new TDatime(thisDateTime->getYear(),
+				   thisDateTime->getMonth(),
+				   thisDateTime->getMDay(),
+				   thisDateTime->getHour() + hourInDay,
+				   thisDateTime->getMinute(),
+				   thisDateTime->getSecond());
+
+	    temp[tdt->Convert()] = thisTemp;
+
+	    delete tdt;
 	}
 
 	delete thisDateTime;
@@ -274,7 +284,16 @@ void TempHumi::printCanvas() {
 	    double countHour = hourFromDay + hourInDay;
 	    double countDay = countHour/24.;
 
-	    humi[countDay] = thisHumi;
+	    TDatime* tdt = new TDatime(thisDateTime->getYear(),
+				   thisDateTime->getMonth(),
+				   thisDateTime->getMDay(),
+				   thisDateTime->getHour() + hourInDay,
+				   thisDateTime->getMinute(),
+				   thisDateTime->getSecond());
+
+	    humi[tdt->Convert()] = thisHumi;
+
+	    delete tdt;
 	}
 
 	delete thisDateTime;
@@ -296,6 +315,23 @@ void TempHumi::printCanvas() {
     c->cd(2);
     setGraphAtt(gHlong, "humi");
     gHlong->Draw("ALC");
+
+    if(true) {
+	TDatime* startdt = new TDatime(2021, 4, 18, 0, 0, 0);
+	TDatime* enddt = new TDatime(2021, 6, 7, 0, 0, 0);
+	gTlong->GetXaxis()->SetRangeUser(startdt->Convert(), enddt->Convert());
+	gTlong->GetXaxis()->SetTimeDisplay(kTRUE);
+	gTlong->GetXaxis()->SetNdivisions(10, 5, 0, kFALSE);
+	gTlong->GetXaxis()->SetTimeFormat("%m\/%d");
+
+	gHlong->GetXaxis()->SetRangeUser(startdt->Convert(), enddt->Convert());
+	gHlong->GetXaxis()->SetTimeDisplay(kTRUE);
+	gHlong->GetXaxis()->SetNdivisions(10, 5, 0, kFALSE);
+	gHlong->GetXaxis()->SetTimeFormat("%m\/%d");
+
+	delete startdt;
+	delete enddt;
+    }
 
     c->Update();
     c->Print("plotting/fittingHualien/temphumi.png");

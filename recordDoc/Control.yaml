@@ -1,7 +1,7 @@
 energy: MeV
-bin: 867, 256
-min: 0., 0.
-max: 5., 0.2
+bin: 1024, 256
+min: -0.5., 0.
+max: 4.5, 0.2
 Voltage threshold: -0.05
 signalstart: 0
 signalend: 99

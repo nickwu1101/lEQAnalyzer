@@ -1,6 +1,6 @@
-Filename: 0418to0607aHistP06h
+Filename: 0418to0607aHistP02hC
 StartTime: 20210418000000
-intervalHour: 6
+intervalHour: 2
 intervalMinute: 0
 intervalSecond: 0
-NumberOfTaking: 200
+NumberOfTaking: 600

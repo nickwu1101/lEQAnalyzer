@@ -141,12 +141,19 @@ void main_test() {
     TimeAnalysis *testObj = new TimeAnalysis();
     GraphPrinter *testObj2 = new GraphPrinter();
     //testObj->test();
+
     testObj2->setHandledTimeUnit("P2H");
     testObj2->test();
+/*
     testObj2->setHandledTimeUnit("P4H");
     testObj2->test();
     testObj2->setHandledTimeUnit("P6H");
     testObj2->test();
+    testObj2->setHandledTimeUnit("P12H");
+    testObj2->test();
+    testObj2->setHandledTimeUnit("PD");
+    testObj2->test();
+*/
 }
 
 void main_makePlots() {

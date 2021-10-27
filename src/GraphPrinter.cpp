@@ -14,11 +14,14 @@
 #include <TTree.h>
 
 #include "Calendar.h"
+#include "PeakFitter.h"
 #include "TempHumi.h"
 
 GraphPrinter::GraphPrinter() {
     handledTU = "P2H";
+    timeRange = "0418to0607";
     quantity = "Energy";
+    errBandStr = "STD";
 }
 
 
@@ -33,21 +36,29 @@ void GraphPrinter::execute() {
 
 
 void GraphPrinter::test() {
-    printFittingGraph();
+
+    //printFittingGraph();
     printNormFittingGraph();
-    printTempCorrectFittingGraph();
-    printCompareCorrectionFittingGraph();
+    //printTempCorrectFittingGraph();
+    //printCompareCorrectionFittingGraph();
     //printFittingTempCorrelation();
 
-    printFittingMeanGraph();
+    //printFittingMeanGraph();
 
-    printCountingGraph();
-    printNormCountingGraph();
-    printTempCorrectCountingGraph();
-    printCompareCorrectionCountingGraph();
+    //printCountingGraph();
+    //printNormCountingGraph();
+    //printTempCorrectCountingGraph();
+    //printCompareCorrectionCountingGraph();
     //printCountingTempCorrelation();
 
-    printEstEventGraph();
+    printTemplateFittingGraph();
+
+    //printEstEventGraph();
+    //print50DaysFitting();
+
+    //printNormFitHist();
+    //printExpoGraph();
+    //printExpoTempCorrelation();
 
     //printOverlapExpAndSimulation();
     //printOverlapExpAndBkg();
@@ -60,14 +71,24 @@ void GraphPrinter::printFittingGraph() {
 
     TFile* f = nullptr;
     if(handledTU == "P2H") {
-	if(quantity == "Energy")
-	    f = new TFile("ready/fitResult.root", "READ");
-	else if(quantity == "Shifting")
-	    f = new TFile("ready/fitResultS.root", "READ");
+	if(timeRange == "0418to0607") {
+	    if(quantity == "Energy") {
+		f = new TFile("ready/fitResult.root", "READ");
+	    } else if(quantity == "Shifting") {
+		f = new TFile("ready/fitResultS.root", "READ");
+	    }
+	} else if(timeRange == "0418to0716") {
+	    f = new TFile("ready/fitResultL.root", "READ");
+	}
     } else if(handledTU == "P4H") {
 	f = new TFile("ready/fitResult4.root", "READ");
-    } else if(handledTU == "P6H")
+    } else if(handledTU == "P6H") {
 	f = new TFile("ready/fitResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	f = new TFile("ready/fitResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	f = new TFile("ready/fitResultD.root", "READ");
+    }
 
     TTree* fitTree;
     int entryNo;
@@ -109,14 +130,20 @@ void GraphPrinter::printFittingGraph() {
 
     TFile* foutlier = nullptr;
     if(handledTU == "P2H") {
-	if(quantity == "Energy")
+	if(quantity == "Energy") {
 	    foutlier = new TFile("ready/NormalizedFitResult.root", "READ");
-	else if(quantity == "Shifting")
+	} else if(quantity == "Shifting") {
 	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
+	}
     } else if(handledTU == "P4H") {
 	foutlier = new TFile("ready/NormalizedFitResult4.root", "READ");
-    } else if(handledTU == "P6H")
+    } else if(handledTU == "P6H") {
 	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	foutlier = new TFile("ready/NormalizedFitResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	foutlier = new TFile("ready/NormalizedFitResultD.root", "READ");
+    }
 
     TTree* outlierTree;
     int entryNoOutlier;
@@ -145,6 +172,10 @@ void GraphPrinter::printFittingGraph() {
     double std06 = 0.;
     double std16 = 0.;
     double std0406 = 0.;
+    double Esum04 = 0.;
+    double Esum06 = 0.;
+    double Esum16 = 0.;
+    double Esum0406 = 0.;
     int ntimebin04 = 0;
     int ntimebin06 = 0;
     int ntimebin16 = 0;
@@ -166,6 +197,9 @@ void GraphPrinter::printFittingGraph() {
 	    } else if(handledTU == "P4H") {
 		condition06 = true;
 		condition0406 = true;
+	    } else {
+		condition06 = true;
+		condition0406 = true;
 	    }
 
 	    if(!isoutlier16 && !isoutlier04) {
@@ -173,6 +207,7 @@ void GraphPrinter::printFittingGraph() {
 		ge04->SetPointError(ge04->GetN() - 1, 0., cge04);
 		mean04 += cg04;
 		std04 += cg04*cg04;
+		Esum04 += cge04*cge04;
 		ntimebin04++;
 	    }
 
@@ -181,6 +216,7 @@ void GraphPrinter::printFittingGraph() {
 		ge06->SetPointError(ge06->GetN() - 1, 0., cge06);
 		mean06 += cg06;
 		std06 += cg06*cg06;
+		Esum06 += cge06*cge06;
 		ntimebin06++;
 	    }
 
@@ -189,6 +225,7 @@ void GraphPrinter::printFittingGraph() {
 		ge16->SetPointError(ge16->GetN() - 1, 0., cge16);
 		mean16 += cg16;
 		std16 += cg16*cg16;
+		Esum16 += cge16*cge16;
 		ntimebin16++;
 	    }
 
@@ -197,6 +234,7 @@ void GraphPrinter::printFittingGraph() {
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., cge0406);
 		mean0406 += cg0406;
 		std0406 += cg0406*cg0406;
+		Esum0406 += cge0406*cge0406;
 		ntimebin0406++;
 	    }
 
@@ -221,15 +259,32 @@ void GraphPrinter::printFittingGraph() {
     std16 = TMath::Sqrt(std16/(ntimebin16 - 1));
     std0406 = TMath::Sqrt(std0406/(ntimebin0406 - 1));
 
-    double err04 = std04/TMath::Sqrt(ntimebin04);
-    double err06 = std06/TMath::Sqrt(ntimebin06);
-    double err16 = std16/TMath::Sqrt(ntimebin16);
-    double err0406 = std0406/TMath::Sqrt(ntimebin0406);
+    Esum04 = TMath::Sqrt(Esum04);
+    Esum06 = TMath::Sqrt(Esum06);
+    Esum16 = TMath::Sqrt(Esum16);
+    Esum0406 = TMath::Sqrt(Esum0406);
 
-    printWithErrorBand(ge04, mean04, err04, "cGauss", "peak04", handledTU);
-    printWithErrorBand(ge06, mean06, err06, "cGauss", "peak06", handledTU);
-    printWithErrorBand(ge16, mean16, err16, "cGauss", "peak16", handledTU);
-    printWithErrorBand(ge0406, mean0406, err0406, "cGauss", "peak0406", handledTU);
+    double err04 = 0.;
+    double err06 = 0.;
+    double err16 = 0.;
+    double err0406 = 0.;
+
+    if(errBandStr == "STD") {
+	err04 = std04/TMath::Sqrt(ntimebin04);
+	err06 = std06/TMath::Sqrt(ntimebin06);
+	err16 = std16/TMath::Sqrt(ntimebin16);
+	err0406 = std0406/TMath::Sqrt(ntimebin0406);
+    } else if(errBandStr == "Esum") {
+	err04 = Esum04/ntimebin04;
+	err06 = Esum06/ntimebin06;
+	err16 = Esum16/ntimebin16;
+	err0406 = Esum0406/ntimebin0406;
+    }
+
+    printWithErrorBand(ge04, mean04, std04, err04, "cGauss", "peak04", handledTU);
+    printWithErrorBand(ge06, mean06, std06, err06, "cGauss", "peak06", handledTU);
+    printWithErrorBand(ge16, mean16, std16, err16, "cGauss", "peak16", handledTU);
+    printWithErrorBand(ge0406, mean0406, std0406, err0406, "cGauss", "peak0406", handledTU);
 
     delete ge0406;
     delete ge16;
@@ -262,8 +317,13 @@ void GraphPrinter::printEstEventGraph() {
 		f = new TFile("ready/fitResultS.root", "READ");
 	} else if(handledTU == "P4H") {
 	    f = new TFile("ready/fitResult4.root", "READ");
-	} else if(handledTU == "P6H")
+	} else if(handledTU == "P6H") {
 	    f = new TFile("ready/fitResult6.root", "READ");
+	} else if(handledTU == "P12H") {
+	    f = new TFile("ready/fitResult12.root", "READ");
+	} else if(handledTU == "PD") {
+	    f = new TFile("ready/fitResultD.root", "READ");
+	}
     } else if(isTempCorrection == true) {
 	if(handledTU == "P2H") {
 	    if(quantity == "Energy")
@@ -323,8 +383,13 @@ void GraphPrinter::printEstEventGraph() {
 	    foutlier = new TFile("ready/NormalizedFitResultS.root", "READ");
     } else if(handledTU == "P4H") {
 	foutlier = new TFile("ready/NormalizedFitResult4.root", "READ");
-    } else if(handledTU == "P6H")
+    } else if(handledTU == "P6H") {
 	foutlier = new TFile("ready/NormalizedFitResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	foutlier = new TFile("ready/NormalizedFitResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	foutlier = new TFile("ready/NormalizedFitResultD.root", "READ");
+    }
 
     TTree* outlierTree;
     int entryNoOutlier;
@@ -353,6 +418,10 @@ void GraphPrinter::printEstEventGraph() {
     double std06 = 0.;
     double std16 = 0.;
     double std0406 = 0.;
+    double Esum04 = 0.;
+    double Esum06 = 0.;
+    double Esum16 = 0.;
+    double Esum0406 = 0.;
     int ntimebin04 = 0;
     int ntimebin06 = 0;
     int ntimebin16 = 0;
@@ -383,6 +452,7 @@ void GraphPrinter::printEstEventGraph() {
 		ge04->SetPointError(ge04->GetN() - 1, 0., cge04/estFactor);
 		mean04 += cg04/estFactor;
 		std04 += (cg04/estFactor)*(cg04/estFactor);
+		Esum04 += (cge04/estFactor)*(cge04/estFactor);
 		ntimebin04++;
 	    }
 
@@ -391,6 +461,7 @@ void GraphPrinter::printEstEventGraph() {
 		ge06->SetPointError(ge06->GetN() - 1, 0., cge06/estFactor);
 		mean06 += cg06/estFactor;
 		std06 += (cg06/estFactor)*(cg06/estFactor);
+		Esum06 += (cge06/estFactor)*(cge06/estFactor);
 		ntimebin06++;
 	    }
 
@@ -399,6 +470,7 @@ void GraphPrinter::printEstEventGraph() {
 		ge16->SetPointError(ge16->GetN() - 1, 0., cge16/estFactor);
 		mean16 += cg16/estFactor;
 		std16 += (cg16/estFactor)*(cg16/estFactor);
+		Esum16 += (cge16/estFactor)*(cge16/estFactor);
 		ntimebin16++;
 	    }
 
@@ -407,6 +479,7 @@ void GraphPrinter::printEstEventGraph() {
 		ge0406->SetPointError(ge0406->GetN() - 1, 0., cge0406/estFactor);
 		mean0406 += cg0406/estFactor;
 		std0406 += (cg0406/estFactor)*(cg0406/estFactor);
+		Esum0406 += (cge0406/estFactor)*(cge0406/estFactor);
 		ntimebin0406++;
 	    }
 
@@ -431,15 +504,32 @@ void GraphPrinter::printEstEventGraph() {
     std16 = TMath::Sqrt(std16/(ntimebin16 - 1));
     std0406 = TMath::Sqrt(std0406/(ntimebin0406 - 1));
 
-    double err04 = std04/TMath::Sqrt(ntimebin04);
-    double err06 = std06/TMath::Sqrt(ntimebin06);
-    double err16 = std16/TMath::Sqrt(ntimebin16);
-    double err0406 = std0406/TMath::Sqrt(ntimebin0406);
+    Esum04 = TMath::Sqrt(Esum04);
+    Esum06 = TMath::Sqrt(Esum06);
+    Esum16 = TMath::Sqrt(Esum16);
+    Esum0406 = TMath::Sqrt(Esum0406);
 
-    printWithErrorBand(ge04, mean04, err04, "estEvents", "peak04", handledTU);
-    printWithErrorBand(ge06, mean06, err06, "estEvents", "peak06", handledTU);
-    printWithErrorBand(ge16, mean16, err16, "estEvents", "peak16", handledTU);
-    printWithErrorBand(ge0406, mean0406, err0406, "estEvents", "peak0406", handledTU);
+    double err04 = 0.;
+    double err06 = 0.;
+    double err16 = 0.;
+    double err0406 = 0.;
+
+    if(errBandStr == "STD") {
+	err04 = std04/TMath::Sqrt(ntimebin04);
+	err06 = std06/TMath::Sqrt(ntimebin06);
+	err16 = std16/TMath::Sqrt(ntimebin16);
+	err0406 = std0406/TMath::Sqrt(ntimebin0406);
+    } else if(errBandStr == "Esum") {
+	err04 = Esum04/ntimebin04;
+	err06 = Esum06/ntimebin06;
+	err16 = Esum16/ntimebin16;
+	err0406 = Esum0406/ntimebin0406;
+    }
+
+    printWithErrorBand(ge04, mean04, std04, err04, "estEvents", "peak04", handledTU);
+    printWithErrorBand(ge06, mean06, std06, err06, "estEvents", "peak06", handledTU);
+    printWithErrorBand(ge16, mean16, std16, err16, "estEvents", "peak16", handledTU);
+    printWithErrorBand(ge0406, mean0406, std0406, err0406, "estEvents", "peak0406", handledTU);
 
     delete ge0406;
     delete ge16;
@@ -469,6 +559,10 @@ void GraphPrinter::printCountingGraph() {
 	f = new TFile("ready/fluctResult4.root", "READ");
     } else if(handledTU == "P6H") {
 	f = new TFile("ready/fluctResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	f = new TFile("ready/fluctResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	f = new TFile("ready/fluctResultD.root", "READ");
     }
 
     TTree* countTree;
@@ -523,6 +617,10 @@ void GraphPrinter::printCountingGraph() {
 	foutlier = new TFile("ready/NormalizedFluctResult4.root", "READ");
     } else if(handledTU == "P6H") {
 	foutlier = new TFile("ready/NormalizedFluctResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	foutlier = new TFile("ready/NormalizedFluctResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	foutlier = new TFile("ready/NormalizedFluctResultD.root", "READ");
     }
 
     TTree* outlierTree;
@@ -653,11 +751,11 @@ void GraphPrinter::printCountingGraph() {
     double err0to25 = std0to25/TMath::Sqrt(ntimebin0to25);
     double err0406 = std0406/TMath::Sqrt(ntimebin0406);
 
-    printWithErrorBand(ge04, mean04, err04, "counts", "peak04", handledTU);
-    printWithErrorBand(ge06, mean06, err06, "counts", "peak06", handledTU);
-    printWithErrorBand(ge16, mean16, err16, "counts", "peak16", handledTU);
-    printWithErrorBand(ge0to25, mean0to25, err0to25, "counts", "0to25", handledTU);
-    printWithErrorBand(ge0406, mean0406, err0406, "counts", "peak0406", handledTU);
+    printWithErrorBand(ge04, mean04, std04, err04, "counts", "peak04", handledTU);
+    printWithErrorBand(ge06, mean06, std06, err06, "counts", "peak06", handledTU);
+    printWithErrorBand(ge16, mean16, std16, err16, "counts", "peak16", handledTU);
+    printWithErrorBand(ge0to25, mean0to25, std0to25, err0to25, "counts", "0to25", handledTU);
+    printWithErrorBand(ge0406, mean0406, std0406, err0406, "counts", "peak0406", handledTU);
 
     delete ge0406;
     delete ge0to25;
@@ -1047,10 +1145,10 @@ void GraphPrinter::printTempCorrectFittingGraph() {
     double err16 = std16/TMath::Sqrt(ntimebin16);
     double err0406 = std0406/TMath::Sqrt(ntimebin0406);
 
-    printWithErrorBand(ge04, mean04, err04, "correctedCGauss", "peak04", handledTU);
-    printWithErrorBand(ge06, mean06, err06, "correctedCGauss", "peak06", handledTU);
-    printWithErrorBand(ge16, mean16, err16, "correctedCGauss", "peak16", handledTU);
-    printWithErrorBand(ge0406, mean0406, err0406, "correctedCGauss", "peak0406", handledTU);
+    printWithErrorBand(ge04, mean04, std04, err04, "correctedCGauss", "peak04", handledTU);
+    printWithErrorBand(ge06, mean06, std06, err06, "correctedCGauss", "peak06", handledTU);
+    printWithErrorBand(ge16, mean16, std16, err16, "correctedCGauss", "peak16", handledTU);
+    printWithErrorBand(ge0406, mean0406, std0406, err0406, "correctedCGauss", "peak0406", handledTU);
 
     delete ge0406;
     delete ge16;
@@ -1256,11 +1354,11 @@ void GraphPrinter::printTempCorrectCountingGraph() {
     double err0to25 = std0to25/TMath::Sqrt(ntimebin0to25);
     double err0406 = std0406/TMath::Sqrt(ntimebin0406);
 
-    printWithErrorBand(ge04, mean04, err04, "correctedCounts", "peak04", handledTU);
-    printWithErrorBand(ge06, mean06, err06, "correctedCounts", "peak06", handledTU);
-    printWithErrorBand(ge16, mean16, err16, "correctedCounts", "peak16", handledTU);
-    printWithErrorBand(ge0to25, mean0to25, err0to25, "correctedCounts", "0to25", handledTU);
-    printWithErrorBand(ge0406, mean0406, err0406, "correctedCounts", "peak0406", handledTU);
+    printWithErrorBand(ge04, mean04, std04, err04, "correctedCounts", "peak04", handledTU);
+    printWithErrorBand(ge06, mean06, std06, err06, "correctedCounts", "peak06", handledTU);
+    printWithErrorBand(ge16, mean16, std16, err16, "correctedCounts", "peak16", handledTU);
+    printWithErrorBand(ge0to25, mean0to25, std0to25, err0to25, "correctedCounts", "0to25", handledTU);
+    printWithErrorBand(ge0406, mean0406, std0406, err0406, "correctedCounts", "peak0406", handledTU);
 
     delete ge0406;
     delete ge0to25;
@@ -1294,8 +1392,13 @@ void GraphPrinter::printNormFittingGraph() {
 	    f = new TFile("ready/NormalizedFitResultS.root", "READ");
     } else if(handledTU == "P4H") {
 	f = new TFile("ready/NormalizedFitResult4.root", "READ");
-    } else if(handledTU == "P6H")
+    } else if(handledTU == "P6H") {
 	f = new TFile("ready/NormalizedFitResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	f = new TFile("ready/NormalizedFitResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	f = new TFile("ready/NormalizedFitResultD.root", "READ");
+    }
 
     TTree* fitTree;
     int entryNo;
@@ -1358,6 +1461,10 @@ void GraphPrinter::printNormFittingGraph() {
     double std06 = 0.;
     double std16 = 0.;
     double std0406 = 0.;
+    double Esum04 = 0.;
+    double Esum06 = 0.;
+    double Esum16 = 0.;
+    double Esum0406 = 0.;
     int ntimebin04 = 0;
     int ntimebin06 = 0;
     int ntimebin16 = 0;
@@ -1373,6 +1480,7 @@ void GraphPrinter::printNormFittingGraph() {
 
 	    mean04 += cgn04;
 	    std04 += cgn04*cgn04;
+	    Esum04 += cgne04*cgne04;
 	    ntimebin04++;
 	}
 
@@ -1382,6 +1490,7 @@ void GraphPrinter::printNormFittingGraph() {
 
 	    mean06 += cgn06;
 	    std06 += cgn06*cgn06;
+	    Esum06 += cgne06*cgne06;
 	    ntimebin06++;
 	}
 
@@ -1391,6 +1500,7 @@ void GraphPrinter::printNormFittingGraph() {
 
 	    mean16 += cgn16;
 	    std16 += cgn16*cgn16;
+	    Esum16 += cgne16*cgne16;
 	    ntimebin16++;
 	}
 
@@ -1400,6 +1510,7 @@ void GraphPrinter::printNormFittingGraph() {
 
 	    mean0406 += cgn0406;
 	    std0406 += cgn0406*cgn0406;
+	    Esum0406 += cgne0406*cgne0406;
 	    ntimebin0406++;
 	}
 
@@ -1420,15 +1531,27 @@ void GraphPrinter::printNormFittingGraph() {
     std16 = TMath::Sqrt(std16/(ntimebin16 - 1));
     std0406 = TMath::Sqrt(std0406/(ntimebin0406 - 1));
 
-    double err04 = std04/TMath::Sqrt(ntimebin04);
-    double err06 = std06/TMath::Sqrt(ntimebin06);
-    double err16 = std16/TMath::Sqrt(ntimebin16);
-    double err0406 = std0406/TMath::Sqrt(ntimebin0406);
+    double err04 = 0.;
+    double err06 = 0.;
+    double err16 = 0.;
+    double err0406 = 0.;
 
-    printWithErrorBand(ge04, mean04, err04, "normCGauss", "peak04", handledTU);
-    printWithErrorBand(ge06, mean06, err06, "normCGauss", "peak06", handledTU);
-    printWithErrorBand(ge16, mean16, err16, "normCGauss", "peak16", handledTU);
-    printWithErrorBand(ge0406, mean0406, err0406, "normCGauss", "peak0406", handledTU);
+    if(errBandStr == "STD") {
+	err04 = std04/TMath::Sqrt(ntimebin04);
+	err06 = std06/TMath::Sqrt(ntimebin06);
+	err16 = std16/TMath::Sqrt(ntimebin16);
+	err0406 = std0406/TMath::Sqrt(ntimebin0406);
+    } else if(errBandStr == "Esum") {
+	err04 = Esum04/ntimebin04;
+	err06 = Esum06/ntimebin06;
+	err16 = Esum16/ntimebin16;
+	err0406 = Esum0406/ntimebin0406;
+    }
+
+    printWithErrorBand(ge04, mean04, std04, err04, "normCGauss", "peak04", handledTU);
+    printWithErrorBand(ge06, mean06, std06, err06, "normCGauss", "peak06", handledTU);
+    printWithErrorBand(ge16, mean16, std16, err16, "normCGauss", "peak16", handledTU);
+    printWithErrorBand(ge0406, mean0406, std0406, err0406, "normCGauss", "peak0406", handledTU);
 
     delete ge0406;
     delete ge16;
@@ -1458,6 +1581,10 @@ void GraphPrinter::printNormCountingGraph() {
 	f = new TFile("ready/NormalizedFluctResult4.root", "READ");
     } else if(handledTU == "P6H") {
 	f = new TFile("ready/NormalizedFluctResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	f = new TFile("ready/NormalizedFluctResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	f = new TFile("ready/NormalizedFluctResultD.root", "READ");
     }
 
     TTree* countTree;
@@ -1611,11 +1738,11 @@ void GraphPrinter::printNormCountingGraph() {
     double err0to25 = std0to25/TMath::Sqrt(ntimebin0to25);
     double err0406 = std0406/TMath::Sqrt(ntimebin0406);
 
-    printWithErrorBand(ge04, mean04, err04, "normCounts", "peak04", handledTU);
-    printWithErrorBand(ge06, mean06, err06, "normCounts", "peak06", handledTU);
-    printWithErrorBand(ge16, mean16, err16, "normCounts", "peak16", handledTU);
-    printWithErrorBand(ge0to25, mean0to25, err0to25, "normCounts", "0to25", handledTU);
-    printWithErrorBand(ge0406, mean0406, err0406, "normCounts", "peak0406", handledTU);
+    printWithErrorBand(ge04, mean04, std04, err04, "normCounts", "peak04", handledTU);
+    printWithErrorBand(ge06, mean06, std06, err06, "normCounts", "peak06", handledTU);
+    printWithErrorBand(ge16, mean16, std16, err16, "normCounts", "peak16", handledTU);
+    printWithErrorBand(ge0to25, mean0to25, std0to25, err0to25, "normCounts", "0to25", handledTU);
+    printWithErrorBand(ge0406, mean0406, std0406, err0406, "normCounts", "peak0406", handledTU);
 
     delete ge0406;
     delete ge0to25;
@@ -2085,6 +2212,83 @@ void GraphPrinter::printCompareCorrectionCountingGraph() {
 
 
 
+void GraphPrinter::printTemplateFittingGraph() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+
+    TFile* f = nullptr;
+    if(handledTU == "P2H") {
+	f = new TFile("ready/stability_modified.root", "READ");
+    }
+
+    TTree* t;
+    UInt_t time;
+    Float_t nRadon;
+
+    f->GetObject("t", t);
+    t->SetBranchAddress("time", &time);
+    t->SetBranchAddress("nRadon", &nRadon);
+    
+    TGraphErrors* geNRadon = new TGraphErrors();
+
+    double mean = 0.;
+    double std = 0.;
+    double ntimebin = 0.;
+
+    Long64_t nentries = t->GetEntries();
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	t->GetEntry(entry);
+
+	geNRadon->SetPoint(geNRadon->GetN(), time, nRadon);
+	geNRadon->SetPointError(geNRadon->GetN() - 1, 0., 0.);
+	mean += nRadon;
+	std += nRadon*nRadon;
+	ntimebin++;
+    }
+
+    mean /= ntimebin;
+    std -= ntimebin*mean*mean;
+    std = TMath::Sqrt(std/(ntimebin - 1));
+
+    double error = std/TMath::Sqrt(ntimebin);
+
+    printWithErrorBand(geNRadon, mean, std, error, "template", "full", handledTU);
+
+    TGraphErrors* geNNRadon = new TGraphErrors();
+    double nmean = 0.;
+    double nstd = 0.;
+    int nntimebin = 0;
+
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	t->GetEntry(entry);
+	geNNRadon->SetPoint(geNNRadon->GetN(), time, nRadon/mean);
+	geNNRadon->SetPointError(geNNRadon->GetN() - 1, 0., 0.);
+
+	nmean += nRadon/mean;
+	nstd += (nRadon*nRadon)/(mean*mean);
+	nntimebin++;
+    }
+
+    nmean /= nntimebin;
+    nstd -= nntimebin*nmean*nmean;
+    nstd = TMath::Sqrt(nstd/(nntimebin - 1));
+
+    double nerror = nstd/TMath::Sqrt(nntimebin);
+
+    printWithErrorBand(geNNRadon, nmean, nstd, nerror, "normTemplate", "full", handledTU);
+
+    delete geNNRadon;
+    delete geNRadon;
+
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
+
+    delete cGraph;
+}
+
+
+
 void GraphPrinter::printFittingMeanGraph() {
     TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
 
@@ -2096,8 +2300,13 @@ void GraphPrinter::printFittingMeanGraph() {
 	    f = new TFile("ready/fitResultS.root", "READ");
     } else if(handledTU == "P4H") {
 	f = new TFile("ready/fitResult4.root", "READ");
-    } else if(handledTU == "P6H")
+    } else if(handledTU == "P6H") {
 	f = new TFile("ready/fitResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	f = new TFile("ready/fitResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	f = new TFile("ready/fitResultD.root", "READ");
+    }
 
     TTree* fitTree;
     int entryNo;
@@ -2200,11 +2409,11 @@ void GraphPrinter::printFittingMeanGraph() {
     double err16 = std16/TMath::Sqrt(ntimebin16);
     double errFac = stdFac/TMath::Sqrt(ntimebinFac);
 
-    printWithErrorBand(ge04, m04, err04, "mean", "peak04", handledTU);
-    printWithErrorBand(ge06, m06, err06, "mean", "peak06", handledTU);
-    printWithErrorBand(ge16, m16, err16, "mean", "peak16", handledTU);
+    printWithErrorBand(ge04, m04, std04, err04, "mean", "peak04", handledTU);
+    printWithErrorBand(ge06, m06, std06, err06, "mean", "peak06", handledTU);
+    printWithErrorBand(ge16, m16, std16, err16, "mean", "peak16", handledTU);
 
-    printWithErrorBand(geFactor, mFac, errFac, "factor", "peak16", handledTU);
+    printWithErrorBand(geFactor, mFac, stdFac, errFac, "factor", "peak16", handledTU);
 
     hFactor->SetXTitle("factor");
     hFactor->SetYTitle("Entries");
@@ -2230,6 +2439,403 @@ void GraphPrinter::printFittingMeanGraph() {
 	delete f;
     }
 
+    delete cGraph;
+}
+
+
+
+void GraphPrinter::print50DaysFitting() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+
+    TFile* f = nullptr;
+    f = new TFile("ready/0418to0607oneHist.root", "READ");
+
+    TH1D* h = (TH1D*)f->Get("HistoCh0/20210418/000000");
+    PeakFitter* pf = new PeakFitter(h, "peak04");
+
+    pf->setHistoName("20210418000000_full50days_peak04");
+    pf->setQuantity("Energy");
+    pf->setNeedZoom(true);
+
+    pf->fitPeak();
+
+    pf->setPeakType("peak06");
+    pf->setHistoName("20210418000000_full50days_peak06");
+
+    pf->fitPeak();
+
+    pf->setPeakType("peak16");
+    pf->setHistoName("20210418000000_full50days_peak16");
+
+    pf->fitPeak();
+
+    delete pf;
+
+    if(f != nullptr)
+	delete f;
+
+    delete cGraph;
+}
+
+
+
+void GraphPrinter::printNormFitHist() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+
+    TFile* f = nullptr;
+    if(handledTU == "P2H") {
+	f = new TFile("ready/NormalizedFitResult.root", "READ");
+    } else if(handledTU == "P4H") {
+	f = new TFile("ready/NormalizedFitResult4.root", "READ");
+    } else if(handledTU == "P6H") {
+	f = new TFile("ready/NormalizedFitResult6.root", "READ");
+    } else if(handledTU == "P12H") {
+	f = new TFile("ready/NormalizedFitResult12.root", "READ");
+    } else if(handledTU == "PD") {
+	f = new TFile("ready/NormalizedFitResultD.root", "READ");
+    }
+
+    TTree* fitTree;
+    int entryNo;
+    int year;
+    int month;
+    int day;
+    int hour;
+    int min;
+    double sec;
+
+    double cgn04;
+    double cgn06;
+    double cgn16;
+    double cgn0406;
+
+    double cgne04;
+    double cgne06;
+    double cgne16;
+    double cgne0406;
+
+    bool isoutlier04;
+    bool isoutlier06;
+    bool isoutlier16;
+    bool isoutlier0406;
+
+    f->GetObject("dataFitting", fitTree);
+    fitTree->SetBranchAddress("entryNo", &entryNo);
+    fitTree->SetBranchAddress("year", &year);
+    fitTree->SetBranchAddress("month", &month);
+    fitTree->SetBranchAddress("day", &day);
+    fitTree->SetBranchAddress("hour", &hour);
+    fitTree->SetBranchAddress("minute", &min);
+    fitTree->SetBranchAddress("second", &sec);
+
+    fitTree->SetBranchAddress("cgn04", &cgn04);
+    fitTree->SetBranchAddress("cgn06", &cgn06);
+    fitTree->SetBranchAddress("cgn16", &cgn16);
+    fitTree->SetBranchAddress("cgn0406", &cgn0406);
+
+    fitTree->SetBranchAddress("cgne04", &cgne04);
+    fitTree->SetBranchAddress("cgne06", &cgne06);
+    fitTree->SetBranchAddress("cgne16", &cgne16);
+    fitTree->SetBranchAddress("cgne0406", &cgne0406);
+
+    fitTree->SetBranchAddress("isoutlier04", &isoutlier04);
+    fitTree->SetBranchAddress("isoutlier06", &isoutlier06);
+    fitTree->SetBranchAddress("isoutlier16", &isoutlier16);
+    fitTree->SetBranchAddress("isoutlier0406", &isoutlier0406);
+
+    TH1D* hcgn0406 = new TH1D("hcgn0406", "hcgn0406", 300, 0.85, 1.15);
+    TH1D* hcgne0406 = new TH1D("hcgne0406", "hcgne0406", 500, 0., 0.05);
+
+    Long64_t nentries = fitTree->GetEntries();
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	fitTree->GetEntry(entry);
+
+	hcgn0406->Fill(cgn0406);
+	hcgne0406->Fill(cgne0406);
+    }
+
+    char filename[100];
+    hcgn0406->Draw("HISTO");
+    sprintf(filename, "plotting/fitting2/hist/hcgn0406_%s.png", handledTU.c_str());
+    cGraph->Print(filename);
+    hcgne0406->Draw("HISTO");
+    sprintf(filename, "plotting/fitting2/hist/hcgne0406_%s.png", handledTU.c_str());
+    cGraph->Print(filename);
+
+    delete hcgne0406;
+    delete hcgn0406;
+
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
+
+    delete cGraph;
+}
+
+
+
+void GraphPrinter::printExpoGraph() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+
+    TFile* f = nullptr;
+    if(handledTU == "P2H") {
+	f = new TFile("ready/fitResult.root", "READ");
+    }
+
+    TTree* fitTree;
+    int entryNo;
+    int year;
+    int month;
+    int day;
+    int hour;
+    int min;
+    double sec;
+
+    double cpow04;
+    double cpow06;
+    double cpow16;
+
+    double expo04;
+    double expo06;
+    double expo16;
+
+    f->GetObject("dataFitting", fitTree);
+    fitTree->SetBranchAddress("entryNo", &entryNo);
+    fitTree->SetBranchAddress("year", &year);
+    fitTree->SetBranchAddress("month", &month);
+    fitTree->SetBranchAddress("day", &day);
+    fitTree->SetBranchAddress("hour", &hour);
+    fitTree->SetBranchAddress("minute", &min);
+    fitTree->SetBranchAddress("second", &sec);
+
+    fitTree->SetBranchAddress("cpow04", &cpow04);
+    fitTree->SetBranchAddress("cpow06", &cpow06);
+    fitTree->SetBranchAddress("cpow16", &cpow16);
+
+    fitTree->SetBranchAddress("expo04", &expo04);
+    fitTree->SetBranchAddress("expo06", &expo06);
+    fitTree->SetBranchAddress("expo16", &expo16);
+
+    TGraphErrors* geCPow04 = new TGraphErrors();
+    TGraphErrors* geCPow06 = new TGraphErrors();
+    TGraphErrors* geCPow16 = new TGraphErrors();
+
+    TGraphErrors* geExpo04 = new TGraphErrors();
+    TGraphErrors* geExpo06 = new TGraphErrors();
+    TGraphErrors* geExpo16 = new TGraphErrors();
+
+    double meanCP04 = 0.;
+    double meanCP06 = 0.;
+    double meanCP16 = 0.;
+    double meanEX04 = 0.;
+    double meanEX06 = 0.;
+    double meanEX16 = 0.;
+
+    double stdCP04 = 0.;
+    double stdCP06 = 0.;
+    double stdCP16 = 0.;
+    double stdEX04 = 0.;
+    double stdEX06 = 0.;
+    double stdEX16 = 0.;
+
+    int ntimebin04 = 0;
+    int ntimebin06 = 0;
+    int ntimebin16 = 0;
+
+    Long64_t nentries = fitTree->GetEntries();
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	fitTree->GetEntry(entry);
+	TDatime* tdt = new TDatime(year, month, day, hour, min, (int)sec);
+
+	geCPow04->SetPoint(geCPow04->GetN(), tdt->Convert(), cpow04);
+	geCPow06->SetPoint(geCPow06->GetN(), tdt->Convert(), cpow06);
+	geCPow16->SetPoint(geCPow16->GetN(), tdt->Convert(), cpow16);
+	geExpo04->SetPoint(geExpo04->GetN(), tdt->Convert(), expo04);
+	geExpo06->SetPoint(geExpo06->GetN(), tdt->Convert(), expo06);
+	geExpo16->SetPoint(geExpo16->GetN(), tdt->Convert(), expo16);
+
+	geCPow04->SetPointError(geCPow04->GetN() - 1, 0., 0.);
+	geCPow06->SetPointError(geCPow06->GetN() - 1, 0., 0.);
+	geCPow16->SetPointError(geCPow16->GetN() - 1, 0., 0.);
+	geExpo04->SetPointError(geExpo04->GetN() - 1, 0., 0.);
+	geExpo06->SetPointError(geExpo06->GetN() - 1, 0., 0.);
+	geExpo16->SetPointError(geExpo16->GetN() - 1, 0., 0.);
+
+	meanCP04 += cpow04;
+	meanCP06 += cpow06;
+	meanCP16 += cpow16;
+	meanEX04 += expo04;
+	meanEX06 += expo06;
+	meanEX16 += expo16;
+
+	stdCP04 += cpow04*cpow04;
+	stdCP06 += cpow06*cpow06;
+	stdCP16 += cpow16*cpow16;
+	stdEX04 += expo04*expo04;
+	stdEX06 += expo06*expo06;
+	stdEX16 += expo16*expo16;
+
+	ntimebin04++;
+	ntimebin06++;
+	ntimebin16++;
+
+	delete tdt;
+    }
+
+    meanCP04 /= ntimebin04;
+    meanCP06 /= ntimebin06;
+    meanCP16 /= ntimebin16;
+    meanEX04 /= ntimebin04;
+    meanEX06 /= ntimebin06;
+    meanEX16 /= ntimebin16;
+
+    stdCP04 -= ntimebin04*meanCP04*meanCP04;
+    stdCP06 -= ntimebin06*meanCP06*meanCP06;
+    stdCP16 -= ntimebin16*meanCP16*meanCP16;
+    stdEX04 -= ntimebin04*meanEX04*meanEX04;
+    stdEX06 -= ntimebin06*meanEX06*meanEX06;
+    stdEX16 -= ntimebin16*meanEX16*meanEX16;
+    stdCP04 = TMath::Sqrt(stdCP04/(ntimebin04 - 1));
+    stdCP06 = TMath::Sqrt(stdCP06/(ntimebin06 - 1));
+    stdCP16 = TMath::Sqrt(stdCP16/(ntimebin16 - 1));
+    stdEX04 = TMath::Sqrt(stdEX04/(ntimebin04 - 1));
+    stdEX06 = TMath::Sqrt(stdEX06/(ntimebin06 - 1));
+    stdEX16 = TMath::Sqrt(stdEX16/(ntimebin16 - 1));
+
+    double errCP04 = stdCP04/TMath::Sqrt(ntimebin04);
+    double errCP06 = stdCP06/TMath::Sqrt(ntimebin06);
+    double errCP16 = stdCP16/TMath::Sqrt(ntimebin16);
+    double errEX04 = stdEX04/TMath::Sqrt(ntimebin04);
+    double errEX06 = stdEX06/TMath::Sqrt(ntimebin06);
+    double errEX16 = stdEX16/TMath::Sqrt(ntimebin16);
+
+    printWithErrorBand(geCPow04, meanCP04, stdCP04, errCP04, "cPow", "peak04", handledTU);
+    printWithErrorBand(geCPow06, meanCP06, stdCP06, errCP06, "cPow", "peak06", handledTU);
+    printWithErrorBand(geCPow16, meanCP16, stdCP16, errCP16, "cPow", "peak16", handledTU);
+    printWithErrorBand(geExpo04, meanEX04, stdEX04, errEX04, "expo", "peak04", handledTU);
+    printWithErrorBand(geExpo06, meanEX06, stdEX06, errEX06, "expo", "peak06", handledTU);
+    printWithErrorBand(geExpo16, meanEX16, stdEX16, errEX16, "expo", "peak16", handledTU);
+
+    delete geExpo16;
+    delete geExpo06;
+    delete geExpo04;
+
+    delete geCPow16;
+    delete geCPow06;
+    delete geCPow04;
+
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
+
+    delete cGraph;
+}
+
+
+
+void GraphPrinter::printExpoTempCorrelation() {
+    TCanvas* cGraph = new TCanvas("cGraph", "cGraph", 1400, 800);
+    TempHumi* th = new TempHumi();
+
+    TFile* f = nullptr;
+    if(handledTU == "P2H") {
+	f = new TFile("ready/fitResult.root", "READ");
+    }
+
+    TTree* fitTree;
+    int entryNo;
+    int year;
+    int month;
+    int day;
+    int hour;
+    int min;
+    double sec;
+
+    double cpow04;
+    double cpow06;
+    double cpow16;
+
+    double expo04;
+    double expo06;
+    double expo16;
+
+    f->GetObject("dataFitting", fitTree);
+    fitTree->SetBranchAddress("entryNo", &entryNo);
+    fitTree->SetBranchAddress("year", &year);
+    fitTree->SetBranchAddress("month", &month);
+    fitTree->SetBranchAddress("day", &day);
+    fitTree->SetBranchAddress("hour", &hour);
+    fitTree->SetBranchAddress("minute", &min);
+    fitTree->SetBranchAddress("second", &sec);
+
+    fitTree->SetBranchAddress("cpow04", &cpow04);
+    fitTree->SetBranchAddress("cpow06", &cpow06);
+    fitTree->SetBranchAddress("cpow16", &cpow16);
+
+    fitTree->SetBranchAddress("expo04", &expo04);
+    fitTree->SetBranchAddress("expo06", &expo06);
+    fitTree->SetBranchAddress("expo16", &expo16);
+
+    TGraphErrors* geCPow04 = new TGraphErrors();
+    TGraphErrors* geCPow06 = new TGraphErrors();
+    TGraphErrors* geCPow16 = new TGraphErrors();
+
+    TGraphErrors* geExpo04 = new TGraphErrors();
+    TGraphErrors* geExpo06 = new TGraphErrors();
+    TGraphErrors* geExpo16 = new TGraphErrors();
+
+    Long64_t nentries = fitTree->GetEntries();
+    for(Long64_t entry = 0; entry < nentries; ++entry) {
+	fitTree->GetEntry(entry);
+
+	char dtStr[15];
+	sprintf(dtStr, "%04d%02d%02d%02d%02d%02.f", year, month, day, hour, min, sec);
+
+	double temp = th->getAvgTemp(dtStr);
+	double tempErr = th->getErrTemp(dtStr);
+
+	geCPow04->SetPoint(geCPow04->GetN(), temp, cpow04);
+	geCPow06->SetPoint(geCPow06->GetN(), temp, cpow06);
+	geCPow16->SetPoint(geCPow16->GetN(), temp, cpow16);
+
+	geExpo04->SetPoint(geExpo04->GetN(), temp, expo04);
+	geExpo06->SetPoint(geExpo06->GetN(), temp, expo06);
+	geExpo16->SetPoint(geExpo16->GetN(), temp, expo16);
+
+	geCPow04->SetPointError(geCPow04->GetN() - 1, tempErr, 0.);
+	geCPow06->SetPointError(geCPow06->GetN() - 1, tempErr, 0.);
+	geCPow16->SetPointError(geCPow16->GetN() - 1, tempErr, 0.);
+
+	geExpo04->SetPointError(geExpo04->GetN() - 1, tempErr, 0.);
+	geExpo06->SetPointError(geExpo06->GetN() - 1, tempErr, 0.);
+	geExpo16->SetPointError(geExpo16->GetN() - 1, tempErr, 0.);
+    }
+
+
+    printCorrelationWithTemp(geCPow04, "cPow", "peak04", handledTU);
+    printCorrelationWithTemp(geCPow06, "cPow", "peak06", handledTU);
+    printCorrelationWithTemp(geCPow16, "cPow", "peak16", handledTU);
+
+    printCorrelationWithTemp(geExpo04, "expo", "peak04", handledTU);
+    printCorrelationWithTemp(geExpo06, "expo", "peak06", handledTU);
+    printCorrelationWithTemp(geExpo16, "expo", "peak16", handledTU);
+
+    delete geExpo16;
+    delete geExpo06;
+    delete geExpo04;
+
+    delete geCPow16;
+    delete geCPow06;
+    delete geCPow04;
+
+    if(f != nullptr) {
+	f->Close();
+	delete f;
+    }
+
+    delete th;
     delete cGraph;
 }
 
@@ -2314,33 +2920,36 @@ void GraphPrinter::printCorrelationWithTemp(TGraph* inputG, string term, string 
     setGraphAtt(inputG, term + "-Temp", ER, timeUnit);
     setRangeUser(inputG->GetYaxis(), term, ER, timeUnit);
 
-    TFitResultPtr fitptr = inputG->Fit("pol1", "ROB=0.95 WS");
+    TPaveText* pt = nullptr;
+    if(term != "cPow" && term != "expo") {
+	TFitResultPtr fitptr = inputG->Fit("pol1", "ROB=0.95 WS");
 
-    cG->Update();
-    double xleft = 0.6;
-    double yupbd = 0.4;
-    double ydnbd = 0.1;
-    TPaveText* pt = new TPaveText(xleft*gPad->GetUxmax()
-				  + (1 - xleft)*gPad->GetUxmin(),
-				  ydnbd*gPad->GetUymax()
-				  + (1 - ydnbd)*gPad->GetUymin(),
-				  gPad->GetUxmax(),
-				  yupbd*gPad->GetUymax()
-				  + (1 - yupbd)*gPad->GetUymin());
+	cG->Update();
+	double xleft = 0.6;
+	double yupbd = 0.4;
+	double ydnbd = 0.1;
+	pt = new TPaveText(xleft*gPad->GetUxmax()
+			   + (1 - xleft)*gPad->GetUxmin(),
+			   ydnbd*gPad->GetUymax()
+			   + (1 - ydnbd)*gPad->GetUymin(),
+			   gPad->GetUxmax(),
+			   yupbd*gPad->GetUymax()
+			   + (1 - yupbd)*gPad->GetUymin());
 
-    char tline[200];
-    pt->AddText("y = p0 + p1*x");
-    sprintf(tline, "#chi^{2}: %.4e", fitptr->Chi2());
-    pt->AddText(tline);
-    sprintf(tline, "Ndf: %d", fitptr->Ndf());
-    pt->AddText(tline);
-    sprintf(tline, "#chi^{2}/Ndf: %.2e", fitptr->Chi2()/(double)fitptr->Ndf());
-    pt->AddText(tline);
-    sprintf(tline, "p0 = %.6e +/- %.6e", fitptr->Parameter(0), fitptr->Error(0));
-    pt->AddText(tline);
-    sprintf(tline, "p1 = %.6f +/- %.6f", fitptr->Parameter(1), fitptr->Error(1));
-    pt->AddText(tline);
-    pt->Draw();
+	char tline[200];
+	pt->AddText("y = p0 + p1*x");
+	sprintf(tline, "#chi^{2}: %.4e", fitptr->Chi2());
+	pt->AddText(tline);
+	sprintf(tline, "Ndf: %d", fitptr->Ndf());
+	pt->AddText(tline);
+	sprintf(tline, "#chi^{2}/Ndf: %.2e", fitptr->Chi2()/(double)fitptr->Ndf());
+	pt->AddText(tline);
+	sprintf(tline, "p0 = %.6e +/- %.6e", fitptr->Parameter(0), fitptr->Error(0));
+	pt->AddText(tline);
+	sprintf(tline, "p1 = %.6f +/- %.6f", fitptr->Parameter(1), fitptr->Error(1));
+	pt->AddText(tline);
+	pt->Draw();
+    }
 
     cG->Update();
     string outputfolder = "";
@@ -2355,12 +2964,18 @@ void GraphPrinter::printCorrelationWithTemp(TGraph* inputG, string term, string 
 	outputfilename = "cGaussTemp";
     else if(term == "counts")
 	outputfilename = "countsTemp";
+    else if(term == "cPow")
+	outputfilename = "cPowTemp";
+    else if(term == "expo")
+	outputfilename = "expoTemp";
     outputfilename = outputfilename + "_" + ER + "_" + timeUnit + ".png";
 
     string outputPath = outputfolder + "/" + outputfilename;
     cG->Print(outputPath.c_str());
 
-    delete pt;
+    if(pt != nullptr)
+	delete pt;
+
     delete cG;
 }
 
@@ -2431,7 +3046,7 @@ void GraphPrinter::printCompareMultiG(TGraph* graw, TGraph* gcor, string term, s
 
 
 
-void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWidth, string term, string ER, string timeUnit) {
+void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double std, double bandWidth, string term, string ER, string timeUnit) {
     TCanvas* cMG = new TCanvas("cMG", "cMG", 1400, 800);
 
     TGraphErrors* geMean = new TGraphErrors();
@@ -2454,7 +3069,7 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
 	if(i == 0)
 	    tdt = new TDatime(2021, 4, 18, 0, 0, 0);
 	else if(i == 1)
-	    tdt = new TDatime(2021, 6, 7, 0, 0, 0);
+	    tdt = new TDatime(2021, 7, 16, 0, 0, 0);
 
 	geMean->SetPoint(i, tdt->Convert(), mean);
 	ge1Sigma->SetPoint(i, tdt->Convert(), mean);
@@ -2498,9 +3113,9 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
     setRangeUser(mg->GetYaxis(), term, ER, timeUnit);
     mg->Draw("A");
 
-    TLegend* lg = new TLegend(0.6, 0.15, 0.9, 0.3);
+    TLegend* lg = new TLegend(0.6, 0.12, 0.9, 0.3);
     char lline[200];
-    lg->SetHeader(takePeakTypeStr(ER, "energyFirst").c_str(), "C");
+    //lg->SetHeader(takePeakTypeStr(ER, "energyFirst").c_str(), "C");
     lg->AddEntry(dataG, "data");
 
     if(term.find("norm") != string::npos)
@@ -2509,10 +3124,14 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
 	sprintf(lline, "average: %.4f", mean);
 
     lg->AddEntry(geMean, lline);
+    sprintf(lline, "STD: %.4f", std);
+    lg->AddEntry((TObject*)0, lline, "");
     sprintf(lline, "1 SE: %.4f", bandWidth);
     lg->AddEntry(ge1Sigma, lline);
     sprintf(lline, "2 SE: %.4f", 2*bandWidth);
     lg->AddEntry(ge2Sigma, lline);
+    sprintf(lline, "Time of EQ");
+    lg->AddEntry(g0418, lline);
     lg->SetTextSize(0.025);
     lg->Draw();
 
@@ -2526,7 +3145,11 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
 
     string outputfilename = "";
 
-    if(term == "cGauss") {
+    if(term == "cPow") {
+	outputfilename = "cPow";
+    } else if(term == "expo") {
+	outputfilename = "expo";
+    } else if(term == "cGauss") {
 	outputfilename = "cGauss";
     } else if(term == "counts") {
 	outputfilename = "counts";
@@ -2538,6 +3161,10 @@ void GraphPrinter::printWithErrorBand(TGraph* dataG, double mean, double bandWid
 	outputfilename = "normCGauss";
     } else if(term == "normCounts") {
 	outputfilename = "normCounts";
+    } else if(term == "template") {
+	outputfilename = "template";
+    } else if(term == "normTemplate") {
+	outputfilename = "normTemplate";
     } else if(term == "mean") {
 	outputfilename = "mean";
     } else if(term == "factor") {
@@ -2615,11 +3242,11 @@ void GraphPrinter::setGraphAtt(TGraph* inputG, string term, string ER, string ti
 	xAxisTitle = "Date";
 
 	if(timeUnit == "P2H")
-	    yAxisTitle = "C_{2hr}/#bar{C}_{2hr}";
+	    yAxisTitle = "N_{2hr}/#bar{N}_{2hr}";
 	else if(timeUnit == "P4H")
-	    yAxisTitle = "C_{4hr}/#bar{C}_{4hr}";
+	    yAxisTitle = "N_{4hr}/#bar{N}_{4hr}";
 	else if(timeUnit == "P6H")
-	    yAxisTitle = "C_{6hr}/#bar{C}_{6hr}";
+	    yAxisTitle = "N_{6hr}/#bar{N}_{6hr}";
     } else if(term == "normCounts") {
 	graphTitle = "Normalized Counting Events";
 	xAxisTitle = "Date";
@@ -2630,6 +3257,10 @@ void GraphPrinter::setGraphAtt(TGraph* inputG, string term, string ER, string ti
 	    yAxisTitle = "N_{4hr}/#bar{N}_{4hr}";
 	else if(timeUnit == "P6H")
 	    yAxisTitle = "N_{6hr}/#bar{N}_{6hr}";
+	else if(timeUnit == "P12H")
+	    yAxisTitle = "N_{12hr}/#bar{N}_{12hr}";
+	else if(timeUnit == "PD")
+	    yAxisTitle = "N_{Day}/#bar{N}_{Day}";
     } else if(term == "correctedCGauss") {
 	graphTitle = "Gaussian Coefficient with Correction by Temperature";
 	xAxisTitle = "Date";
@@ -2638,6 +3269,14 @@ void GraphPrinter::setGraphAtt(TGraph* inputG, string term, string ER, string ti
 	graphTitle = "Total Counts with Correction by Temperature in an Energy Range";
 	xAxisTitle = "Date";
 	yAxisTitle = "Counts";
+    } else if(term == "cPow-Temp") {
+	graphTitle = "Coefficient Power-Temperature Correlation";
+	xAxisTitle = "Temperature ({}^{o}C)";
+	yAxisTitle = "Coefficient Power";
+    } else if(term == "expo-Temp") {
+	graphTitle = "A for Exponential AX-Temperature Correlation";
+	xAxisTitle = "Temperature ({}^{o}C)";
+	yAxisTitle = "A for Exponential AX";
     } else if(term == "cGauss-Temp") {
 	graphTitle = "Gaussian Coefficient-Temperature Correlation";
 	xAxisTitle = "Temperature ({}^{o}C)";
@@ -2681,7 +3320,15 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
     string graphTitle = "";
     string xAxisTitle = "";
     string yAxisTitle = "";
-    if(term == "cGauss") {
+    if(term == "cPow") {
+	graphTitle = "Coefficient Power Term";
+	xAxisTitle = "Date";
+	yAxisTitle = "Coefficient Power";
+    } else if(term == "expo") {
+	graphTitle = "A for Exponential AX";
+	xAxisTitle = "Date";
+	yAxisTitle = "A for AX";
+    } else if(term == "cGauss") {
 	graphTitle = "Coefficient of Gaussian Term";
 	xAxisTitle = "Date";
 	yAxisTitle = "Coefficient";
@@ -2699,6 +3346,10 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
 	    yAxisTitle = "C_{4hr}/#bar{C}_{4hr}";
 	else if(timeUnit == "P6H")
 	    yAxisTitle = "C_{6hr}/#bar{C}_{6hr}";
+	else if(timeUnit == "P12H")
+	    yAxisTitle = "C_{12hr}/#bar{C}_{12hr}";
+	else if(timeUnit == "PD")
+	    yAxisTitle = "C_{Day}/#bar{C}_{Day}";
     } else if(term == "normCounts") {
 	graphTitle = "Normalized Counting Events";
 	xAxisTitle = "Date";
@@ -2709,6 +3360,10 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
 	    yAxisTitle = "N_{4hr}/#bar{N}_{4hr}";
 	else if(timeUnit == "P6H")
 	    yAxisTitle = "N_{6hr}/#bar{N}_{6hr}";
+	else if(timeUnit == "P12H")
+	    yAxisTitle = "N_{12hr}/#bar{N}_{12hr}";
+	else if(timeUnit == "PD")
+	    yAxisTitle = "N_{Day}/#bar{N}_{Day}";
     } else if(term == "correctedCGauss") {
 	graphTitle = "Gaussian Coefficient with Correction by Temperature";
 	xAxisTitle = "Date";
@@ -2725,6 +3380,16 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
 	graphTitle = "Counts Comparison between Before and After Temperature Correction";
 	xAxisTitle = "Date";
 	yAxisTitle = "Counts";
+    } else if(term == "template") {
+	graphTitle = "Number of Signal Events";
+	xAxisTitle = "Date";
+	yAxisTitle = "Signal Events";
+    } else if(term == "normTemplate") {
+	graphTitle = "Normalized Signal Events";
+	xAxisTitle = "Date";
+
+	if(timeUnit == "P2H")
+	    yAxisTitle = "N_{2hr}/#bar{N}_{2hr}";
     } else if(term == "mean") {
 	graphTitle = "Gaussian Mean";
 	xAxisTitle = "Date";
@@ -2743,7 +3408,7 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
 	graphTitle = graphTitle + " (" + takePeakTypeStr(ER, "elementFirst") + ")";
 
     if(xAxisTitle == "Date") {
-	string zoomtype = "05";
+	string zoomtype = "Full";
 	if(zoomtype == "Full") {
 	    TDatime beginDT(2021, 4, 18, 0, 0, 0); // original 4/18
 	    TDatime finalDT(2021, 6, 7, 0, 0, 0); // original 6/7
@@ -2806,6 +3471,8 @@ void GraphPrinter::setMultiGAtt(TMultiGraph* inputMG, string term, string ER = "
     inputMG->GetHistogram()->SetTitle(graphTitle.c_str());
     inputMG->GetXaxis()->SetTitle(xAxisTitle.c_str());
     inputMG->GetYaxis()->SetTitle(yAxisTitle.c_str());
+    //inputMG->GetXaxis()->SetTitleSize(0.045);
+    //inputMG->GetYaxis()->SetTitleSize(0.045);
 }
 
 
@@ -2814,7 +3481,29 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
     double upper = 1.;
     double lower = 0.;
 
-    if(term == "cGauss") {
+    if(term == "cPow") {
+	if(ER == "peak04") {
+	    upper = 10.;
+	    lower = 9.;
+	} else if(ER == "peak06") {
+	    upper = 10.;
+	    lower = 9.;
+	} else if(ER == "peak16") {
+	    upper = 9.5;
+	    lower = 8.5;
+	}
+    } else if(term == "expo") {
+	if(ER == "peak04") {
+	    upper = -2.5;
+	    lower = -3.8;
+	} else if(ER == "peak06") {
+	    upper = -3.2;
+	    lower = -4.4;
+	} else if(ER == "peak16") {
+	    upper = -1.8;
+	    lower = -2.8;
+	}
+    } else if(term == "cGauss") {
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
@@ -2884,8 +3573,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 39000.;
-		    lower = 32000.;
+		    upper = 46000.;
+		    lower = 40000.;
 		} else if(quantity == "Shifting") {
 		    upper = 25000.;
 		    lower = 14000.;
@@ -2900,8 +3589,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 39000.;
-		    lower = 31000.;
+		    upper = 46000.;
+		    lower = 40000.;
 		} else if(quantity == "Shifting") {
 		    upper = 54000.;
 		    lower = 44000.;
@@ -2916,8 +3605,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak16") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 20000.;
-		    lower = 12000.;
+		    upper = 24000.;
+		    lower = 20000.;
 		} else if(quantity == "Shifting") {
 		    upper = 24000.;
 		    lower = 20000.;
@@ -2948,8 +3637,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 76000.;
-		    lower = 68000.;
+		    upper = 90000.;
+		    lower = 80000.;
 		} else if(quantity == "Shifting") {
 		    upper = 80000.;
 		    lower = 60000.;
@@ -2962,9 +3651,16 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		lower = 200000.;
 	    }
 	}
+    } else if(term == "template") {
+	if(timeUnit == "P2H") {
+	    upper = 32000.;
+	    lower = 12000.;
+	}
     } else if(term == "normCGauss") {
 	double dup = 1.25;
 	double ddw = 0.75;
+	upper = dup;
+	lower = ddw;
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
 		upper = dup;
@@ -3008,11 +3704,19 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	    } else if(timeUnit == "P6H") {
 		upper = dup;
 		lower = ddw;
+	    } else if(timeUnit == "P12H") {
+		upper = dup;
+		lower = ddw;
+	    } else if(timeUnit == "PD") {
+		upper = dup;
+		lower = ddw;
 	    }
 	}
     } else if(term == "normCounts") {
 	double dup = 1.1;
 	double ddw = 0.9;
+	upper = dup;
+	lower = ddw;
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
 		upper = dup;
@@ -3068,6 +3772,11 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 		upper = dup;
 		lower = ddw;
 	    }
+	}
+    } else if(term == "normTemplate") {
+	if(timeUnit == "P2H") {
+	    upper = 1.5;
+	    lower = 0.5;
 	}
     } else if(term == "correctedCGauss") {
 	if(ER == "peak04") {
@@ -3119,8 +3828,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	if(ER == "peak04") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 39000.;
-		    lower = 32000.;
+		    upper = 46000.;
+		    lower = 40000.;
 		} else if(quantity == "Shifting") {
 		    upper = 25000.;
 		    lower = 14000.;
@@ -3135,8 +3844,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak06") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 39000.;
-		    lower = 30000.;
+		    upper = 46000.;
+		    lower = 40000.;
 		} else if(quantity == "Shifting") {
 		    upper = 54000.;
 		    lower = 44000.;
@@ -3151,8 +3860,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak16") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 22000.;
-		    lower = 10000.;
+		    upper = 24000.;
+		    lower = 20000.;
 		} else if(quantity == "Shifting") {
 		    upper = 24000.;
 		    lower = 20000.;
@@ -3178,8 +3887,8 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 	} else if(ER == "peak0406") {
 	    if(timeUnit == "P2H") {
 		if(quantity == "Energy") {
-		    upper = 76000.;
-		    lower = 68000.;
+		    upper = 90000.;
+		    lower = 80000.;
 		} else if(quantity == "Shifting") {
 		    upper = 80000.;
 		    lower = 60000.;
@@ -3272,9 +3981,9 @@ void GraphPrinter::setRangeUser(TAxis* inputAxis, string term, string ER, string
 string GraphPrinter::takePeakTypeStr(string ER, string style) {
     if(ER == "peak04") {
 	if(style == "elementFirst")
-	    return "Pb-214, 0.354 MeV";
+	    return "Pb-214, 0.295 MeV";
 	else if(style == "energyFirst")
-	    return "0.354 MeV (Pb-214)";
+	    return "0.295 MeV (Pb-214)";
     } else if(ER == "peak06") {
 	if(style == "elementFirst")
 	    return "Bi-214, 0.609 MeV";
@@ -3289,9 +3998,11 @@ string GraphPrinter::takePeakTypeStr(string ER, string style) {
 	return "0 to 2.5 MeV";
     } else if(ER == "peak0406") {
 	if(style == "elementFirst")
-	    return "Pb-214 & Bi-214, 0.354 & 0.609 MeV";
+	    return "Pb-214 & Bi-214, 0.295 & 0.609 MeV";
 	else if(style == "energyFirst")
-	    return "0.354 & 0.609 MeV (Pb-214 & Bi-214)";
+	    return "0.295 & 0.609 MeV (Pb-214 & Bi-214)";
+    } else if(ER == "full") {
+	return "Full Spectrum";
     } else {
 	cout << "Unknown peak type!!! Return original input type name." << endl;
 	return ER;

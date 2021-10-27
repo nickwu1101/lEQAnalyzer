@@ -22,7 +22,7 @@ makePlots::makePlots() {
 
     outfile = nullptr;
     filename = "";
-    fileStat = "UPDATE";
+    fileStat = "RECREATE";
     isFileSet = false;
     isInit = false;
 }
@@ -60,11 +60,25 @@ void makePlots::execute() {
     //energyRange = "peak06";
     //assignCutEnergyRange(energyRange, lower, upper);
     //collectWithFilter(energyRange, lower, upper);
-    collectWithFilter("peak04", 0.27, 0.3);
+    //collectWithFilter("peak04", 0.27, 0.3);
     //collectWithFilter("peak06", 0.62, 0.75);
     //collectWithFilter("peak16", 1.39, 1.51);
     //collectWithFilter("peak24", 2.19, 2.24);
     //collectWithFilter("0to25", 0., 2.3);
+
+    int updateform = 1;
+    if(fileStat == "RECREATE") {
+	makeHistoCh0();
+	//collectWithFilter("peak04", 0.267703, 0.297679);
+    } else if(fileStat == "UPDATE") {
+	if(updateform == 1) {
+	    collectWithFilter("peak06", 0.551059, 0.664799);
+	    collectWithFilter("peak16", 1.381790, 1.505686);
+	} else if(updateform == 2) {
+	    collectWithFilter("peak24", 2.19, 2.24);
+	    collectWithFilter("0to25", 0., 2.3);
+	}
+    }
 
     //collectWithDynamicFilter("peak16");
 

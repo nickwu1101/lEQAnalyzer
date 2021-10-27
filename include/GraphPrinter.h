@@ -31,7 +31,13 @@ public:
     void   printCompareCorrectionFittingGraph();
     void   printCompareCorrectionCountingGraph();
 
+    void   printTemplateFittingGraph();
+
     void   printFittingMeanGraph();
+    void   print50DaysFitting();
+    void   printNormFitHist();
+    void   printExpoGraph();
+    void   printExpoTempCorrelation();
 
     void   printOverlapExpAndSimulation();
     void   printOverlapExpAndBkg();
@@ -41,11 +47,13 @@ public:
 private:
     vector<double> vd;
     string handledTU;
+    string timeRange;
     string quantity;
+    string errBandStr;
 
     void   printCorrelationWithTemp(TGraph*, string, string, string);
     void   printCompareMultiG(TGraph*, TGraph*, string, string, string);
-    void   printWithErrorBand(TGraph*, double, double, string, string, string);
+    void   printWithErrorBand(TGraph*, double, double, double, string, string, string);
     void   setErrorBandAtt(TGraphErrors*, TGraphErrors*, TGraphErrors*, string);
     void   setGraphAtt(TGraph*, string, string, string);
     void   setMultiGAtt(TMultiGraph*, string, string, string);
